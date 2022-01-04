@@ -198,6 +198,7 @@ public:
         if (x == data)
             throw AlreadyExist();
         if (x > data) {
+            innerSize++;
             if (rightSon == nullptr) {
                 rightSon = new InnerAvlTree<T>(x);
                 rightSon->father = this;
@@ -206,6 +207,7 @@ public:
                 return rightSon->insert(x);
             }
         } else if (x < data) {
+            innerSize++;
             if (leftSon == nullptr) {
                 leftSon = new InnerAvlTree<T>(x);
                 leftSon->father = this;
@@ -366,11 +368,6 @@ public:
         }
 
         auto inserted = tree->insert(x);
-        InnerAvlTree<T> *obj = internalFind(x);
-        while (obj != nullptr) {
-            obj = obj->getFather();
-            obj->innerSize++;
-        }
         balance(inserted);
         tree->setMax();
     }
@@ -441,5 +438,3 @@ public:
     }
 
 };
-
-#endif
