@@ -1,4 +1,7 @@
 
+#ifndef RANK_TREE
+#define RANK_TREE
+
 #include "exceptions.h"
 #include <cmath>
 #include <iostream>
@@ -125,7 +128,7 @@ private:
             newRightSon->father->updateHeight();
         }
         newRightSon->innerSize =
-                2 + newRightSon->RightSon->innerSize + newRightSon->LeftSon->innerSize + leftSon->innerSize;
+                2 + newRightSon->rightSon->innerSize + newRightSon->leftSon->innerSize + leftSon->innerSize;
         return newRightSon;
     }
 
@@ -148,7 +151,7 @@ private:
         if (newLeftSon->father != nullptr)
             newLeftSon->father->updateHeight();
         newLeftSon->innerSize =
-                2 + newLeftSon->leftSon->innerSize + newLeftSon->RightSon->innerSize + rightSon->innerSize;
+                2 + newLeftSon->leftSon->innerSize + newLeftSon->rightSon->innerSize + rightSon->innerSize;
         return newLeftSon;
 
     }
@@ -233,6 +236,13 @@ public:
         inOrderAux(this, vec);
         return vec;
     }
+
+    void updateInnerSize() {
+        innerSize = 1 + (leftSon == nullptr? 0: leftSon->innerSize) +  (rightSon == nullptr? 0: rightSon->innerSize);
+        if (father != nullptr)
+            father->updateInnerSize();
+    }
+
 //todo: update inner size is needed here
     InnerAvlTree<T> *remove(const T &info) {
         if (data == info) {
@@ -269,6 +279,7 @@ public:
             while (fatherToUpdate != nullptr && fatherToUpdate != this && fatherToUpdate != next) {
                 fatherToUpdate->updateHeight();
                 fatherToUpdate = fatherToUpdate->balance();
+                fatherToUpdate->updateInnerSize();//??
                 fatherToUpdate = fatherToUpdate->father;
             }
             next->father = father;
@@ -285,9 +296,12 @@ public:
                 leftSon->updateHeight();
                 leftSon->father = this;
                 leftSon = leftSon->balance();
+                leftSon->updateInnerSize();
             }
             updateHeight();
-            return balance();
+            auto toReturn = balance();
+            updateInnerSize();
+            return toReturn;
         }
         if (rightSon == nullptr)
             throw NotExist();
@@ -299,9 +313,12 @@ public:
             rightSon->updateHeight();
             rightSon->father = this;
             rightSon = rightSon->balance();
+            rightSon->updateInnerSize();
         }
         updateHeight();
-        return balance();
+        auto toReturn = balance();
+        updateInnerSize();
+        return toReturn;
     }
 
     bool notExists(InnerAvlTree<T> *check) const {
@@ -438,3 +455,5 @@ public:
     }
 
 };
+
+#endif

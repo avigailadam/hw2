@@ -20,7 +20,7 @@ class Group {
 
 public:
     Group(int scale) : scale(scale), isEmpty(true),size(0) {
-        scoresArray = new RankTree [scale];
+        scoresArray = new RankTree[scale];
         for (int i = 0; i < scale; ++i) {
             scoresArray[i] = nullptr;
         }
