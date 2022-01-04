@@ -6,68 +6,70 @@
 #define HW1_UNIONFIND_H
 #include <iostream>
 #include "exceptions.h"
+#include "rankTree.h"
 #define EMPTY -1
 //todo: ranktree should contain levelzero counter
 
-//class Group {
-//    RankTree *scoresArray;
-//    int scale;
-//    bool isEmpty;
-//    int size;
-//
-//
-//public:
-//    Group(int scale) : scale(scale), isEmpty(true),size(0) {
-//        scoresArray = new RankTree [scale];
-//        for (int i = 0; i < scale; ++i) {
-//            scoresArray[i] = nullptr;
-//        }
-//    }
-//
-//    ~Group() {
-//        for (int i = 0; i < scale; ++i)
-//            delete scoresArray[i];
-//        delete[] scoresArray;
-//    }
-//
-//    void mergeGroups(Group &otherGroup){
-//        for (int i = 0; i < scale; ++i)
-//            scoresArray[i].merge(otherGroup.scoresArray[i]);
-//        size+=otherGroup.size;
-//         otherGroup.size=1;
-//    }
-//    int getSize(){
-//        return size;
-//    }
-//};
-class Group{
+class Group {
+    RankTree<player> *scoresArray;
+    int scale;
+    bool isEmpty;
     int size;
-    int num;
+    int levelZeroCounter;
+
+
 public:
-    Group(int num) : num(num),size(1) {}
-
-    Group(const Group& other ){
-        size=other.size;
-        num=other.num;
+    Group(int scale) : scale(scale), isEmpty(true),size(0) {
+        scoresArray = new RankTree [scale];
+        for (int i = 0; i < scale; ++i) {
+            scoresArray[i] = nullptr;
+        }
     }
 
-    Group& operator=(const Group& other){
-        size=other.size;
-        num=other.num;
+    ~Group() {
+        for (int i = 0; i < scale; ++i)
+            delete scoresArray[i];
+        delete[] scoresArray;
     }
 
-    virtual ~Group() {
-
+    void mergeGroups(Group &otherGroup){
+        for (int i = 0; i < scale; ++i)
+            scoresArray[i].merge(otherGroup.scoresArray[i]);
+        size+=otherGroup.size;
+         otherGroup.size=1;
     }
-
     int getSize(){
         return size;
     }
-    void mergeGroups(Group &otherGroup){
-        size+=otherGroup.size;
-//        otherGroup.size=1;
-    }
 };
+//class Group{
+//    int size;
+//    int num;
+//public:
+//    Group(int num) : num(num),size(1) {}
+//
+//    Group(const Group& other ){
+//        size=other.size;
+//        num=other.num;
+//    }
+//
+//    Group& operator=(const Group& other){
+//        size=other.size;
+//        num=other.num;
+//    }
+//
+//    virtual ~Group() {
+//
+//    }
+//
+//    int getSize(){
+//        return size;
+//    }
+//    void mergeGroups(Group &otherGroup){
+//        size+=otherGroup.size;
+//        otherGroup.size=1;
+//    }
+//};
 class UnionFind {
     Group** groups;
     int *parent;
@@ -108,6 +110,8 @@ public:
     void Union(int A, int B) {
         int groupA= find(A);
         int groupB= find(B);
+        if(groupA==groupB)
+            return;
         if (groups[groupA]->getSize() < groups[groupB]->getSize()) {
             parent[groupA] = groupB;
             groups[groupB]->mergeGroups(*groups[groupA]);
