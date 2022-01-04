@@ -3,9 +3,9 @@ project(hw2)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(hw2 main.cpp HashTable.h unionFind.h HashTable.cpp exceptions.h LinkedList.cpp LinkedList.h listTest.cpp
+add_executable(hw2 main.cpp HashTable.h UnionFind.h HashTable.cpp exceptions.h LinkedList.cpp LinkedList.h listTest.cpp
         randomListTest.cpp Game.cpp Game.h)
 add_executable(hashTest randomHashTest.cpp HashTable.h HashTable.cpp exceptions.h LinkedList.cpp LinkedList.h)
 add_executable(listTest exceptions.h LinkedList.cpp LinkedList.h randomListTest.cpp)
-add_executable(RankTreeTest exceptions.h rankTree.h randomRankTest.cpp)
-add_executable(UnionTest exceptions.h unionFind.h unionFindTest.cpp)
+add_executable(RankTreeTest exceptions.h RankTree.h randomRankTest.cpp)
+add_executable(UnionTest exceptions.h UnionFind.h unionFindTest.cpp)

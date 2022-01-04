@@ -6,7 +6,7 @@
 #define HW1_UNIONFIND_H
 #include <iostream>
 #include "exceptions.h"
-#include "rankTree.h"
+#include "RankTree.h"
 #define EMPTY -1
 //todo: ranktree should contain levelzero counter
 

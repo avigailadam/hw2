@@ -1,4 +1,4 @@
-#include "unionFind.h"
+#include "UnionFind.h"
 int main() {
     UnionFind a1(10,10);
     a1.Union(1,2);
