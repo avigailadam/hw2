@@ -21,9 +21,9 @@ class HashTable {
     void extendTable();
     void shrinkTable();
     void rehash(int prevSize);
-    int hash(int num);
+    int hash(int num) const;
 
-    int validLength();
+    int realSize();
 
 public:
 
@@ -36,6 +36,12 @@ public:
     void insert(int playerID, int groupID, int score);
 
     void remove(int playerID);
+
+    bool exists(int playerID);
+
+    int getPlayerGroup(int playerID);
+
+    int getPlayerScore(int playerID);
 
     friend std::ostream &operator<<(std::ostream &os, const HashTable &hash);
 };

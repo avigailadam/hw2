@@ -30,9 +30,9 @@ public:
 
     LinkedList &operator=(const LinkedList &other);
 
-    bool insert(int playerID, int groupID, int score);
+    void insert(int playerID, int groupID, int score);
 
-    bool remove(int playerId);
+    void remove(int playerId);
 
     int getSize() const {
         return size;
