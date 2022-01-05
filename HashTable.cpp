@@ -6,12 +6,10 @@
 #include <iostream>
 #include "HashTable.h"
 
-int HashTable::validLength() {
+int HashTable::realSize() {
     int counter = 0;
     for (int i = 0; i < maxSize; ++i) {
-        int size = table[i].getSize();
-        counter += size;
-        // std::cout << "Table " << i << ": " << size << std::endl;
+        counter += table[i].getSize();;
     }
     return counter;
 }
@@ -19,11 +17,12 @@ int HashTable::validLength() {
 void HashTable::insert(int playerID, int groupID, int score) {
     if (actualSize >= maxSize)
         extendTable();
+    if (exists(playerID))
+        throw AlreadyExist();
     LinkedList *list = &table[hash(playerID)];
-    if (list->insert(playerID, groupID, score))
-        actualSize++;
-    else throw AlreadyExist();
-    assert(actualSize == validLength());
+    list->insert(playerID, groupID, score);
+    actualSize++;
+    assert(actualSize == realSize());
 }
 
 void HashTable::extendTable() {
@@ -34,11 +33,13 @@ void HashTable::extendTable() {
 
 void HashTable::remove(int playerID) {
     LinkedList *list = &table[hash(playerID)];
-    if (list->remove(playerID))
-        actualSize--;
+    if (!exists(playerID))
+        throw NotExist();
+    list->remove(playerID);
+    actualSize--;
     if (actualSize < maxSize / 2)
         shrinkTable();
-    assert(actualSize == validLength());
+    assert(actualSize == realSize());
 }
 
 std::ostream &operator<<(std::ostream &os, const HashTable &hash) {
@@ -61,16 +62,39 @@ void HashTable::rehash(int prevSize) {
     auto *newTable = new LinkedList[maxSize];
     for (int i = 0; i < prevSize; ++i) {
         LinkedList *currList = &table[i];
-        for (LinkedList::const_iterator it = currList->begin(); it != currList->end(); it++) {
+        for (LinkedList::const_iterator it = currList->begin(); it != currList->end(); it++)
             newTable[hash(*it)].insert(*it, it.getGroup(), it.getScore());
-        }
     }
     delete[] table;
     table = newTable;
 }
 
-int HashTable::hash(int num) {
+int HashTable::hash(int num) const {
     return (num % modulo) % maxSize;
+}
+
+int HashTable::getPlayerGroup(int playerID) {
+    LinkedList *list = &table[hash(playerID)];
+    for (LinkedList::const_iterator it = list->begin(); it != list->end(); it++)
+        if (*it == playerID)
+            return it.getGroup();
+    throw NotExist();
+}
+
+int HashTable::getPlayerScore(int playerID) {
+    LinkedList *list = &table[hash(playerID)];
+    for (LinkedList::const_iterator it = list->begin(); it != list->end(); it++)
+        if (*it == playerID)
+            return it.getScore();
+    throw NotExist();
+}
+
+bool HashTable::exists(int playerID) {
+    LinkedList *list = &table[hash(playerID)];
+    for (LinkedList::const_iterator it = list->begin(); it != list->end(); it++)
+        if (*it == playerID)
+            return true;
+    return false;
 }
 
 

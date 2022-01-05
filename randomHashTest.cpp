@@ -11,7 +11,7 @@ int main() {
     srand(1);
 
     HashTable hash;
-    for (int i = 0; i < 20000; i++) {
+    for (int i = 0; i < 20; i++) {
         int action = rand() % 2;
         cout << "====" << i << "====" << endl;
         try {
@@ -30,6 +30,13 @@ int main() {
                     cout << hash;
                     break;
             }
-        } catch (...) {}
+        }
+        catch (NotExist &exist) {
+            cout<<"Nothing to remove"<<endl;
+        }
+        catch (AlreadyExist &exist) {
+            cout<<"Nothing to insert"<<endl;
+        }
+        catch (...) {}
     }
 }

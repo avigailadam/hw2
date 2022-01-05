@@ -6,13 +6,13 @@
 #include <iostream>
 #include <cassert>
 
-bool LinkedList::remove(int playerId) {
+void LinkedList::remove(int playerId) {
     const_iterator before = begin();
     if (*before == playerId) {
         head = before.current_node->next;
         delete before.current_node;
         size--;
-        return true;
+        return;
     }
     const_iterator current = before++;
     while (current != end()) {
@@ -23,9 +23,8 @@ bool LinkedList::remove(int playerId) {
         before.current_node->next = current.current_node->next;
         delete current.current_node;
         size--;
-        return true;
+        return;
     }
-    return false;
 }
 
 LinkedList::LinkedList(const LinkedList &other) : size(other.size) {
@@ -73,18 +72,18 @@ LinkedList &LinkedList::operator=(const LinkedList &other) {
     return *this;
 }
 
-bool LinkedList::insert(int playerId, int groupId, int score) {
+void LinkedList::insert(int playerId, int groupId, int score) {
     Node *new_node = new Node(playerId, groupId, score);
     if (head == nullptr) {
         head = new_node;
         size++;
-        return true;
+        return;
     }
     const_iterator current = begin();
     while (current != end()) {
         if (*current == playerId) {
             delete new_node;
-            return false;
+            return;
         }
         if (current.current_node->next == nullptr)
             break;
@@ -93,7 +92,6 @@ bool LinkedList::insert(int playerId, int groupId, int score) {
     assert(current.current_node != nullptr);
     current.current_node->next = new_node;
     size++;
-    return true;
 }
 
 std::ostream &operator<<(std::ostream &os, const LinkedList &list) {
