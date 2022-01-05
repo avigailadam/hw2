@@ -2,9 +2,14 @@
 #ifndef RANK_TREE
 #define RANK_TREE
 
+#define FIELD_OR_DEFAULT(son, field, default) ((son) != nullptr ? (son)->field : default)
+#define ASSERT_SON(son, method) if((son) != nullptr) son->method()
+#define ASSERT_EQUALS(a, b) if ((a) != (b)) do { std::cout << "tree:" << std::endl; debugTree(0); std::cout << (#a) << ": " << (a) << std::endl << " != " << std::endl << (#b) << ": " <<(b) << std::endl; assert(0); } while(0)
+
 #include "exceptions.h"
 #include <cmath>
 #include <iostream>
+#include <cassert>
 #include "my_vector.h"
 
 using std::cout;
@@ -21,7 +26,7 @@ class InnerAvlTree {
     T data;
     InnerAvlTree<T> *max;
     int height;
-    int innerSize;
+    int size;
     InnerAvlTree<T> *father;
     InnerAvlTree<T> *rightSon;
     InnerAvlTree<T> *leftSon;
@@ -42,7 +47,7 @@ public:
         leftSon = nullptr;
         max = this;
         height = 0;
-        innerSize = 1;
+        size = 1;
     }
 
 
@@ -50,14 +55,12 @@ public:
         return father;
     }
 
-    int getInnerSize() {
-        return innerSize;
-    }
-
     ~InnerAvlTree() {
         delete rightSon;
         delete leftSon;
     }
+
+//todo: update size needed in vec const'
 
     explicit InnerAvlTree(my_vector<T> &vector) : data(vector.at(vector.size() / 2)), height(0), father(nullptr) {
         int size = vector.size();
@@ -70,11 +73,11 @@ public:
         height = std::max(leftHeight, rightHeight) + 1;
         if (rightSon != nullptr) {
             rightSon->father = this;
-            innerSize += rightSon->innerSize;
+            size += rightSon->size;
         }
         if (leftSon != nullptr) {
             leftSon->father = this;
-            innerSize += leftSon->innerSize;
+            size += leftSon->size;
         }
 
         updateHeight();
@@ -110,7 +113,7 @@ private:
         return leftHeight - rightHeight;
     }
 
-    InnerAvlTree<T> *Left_rotate() {
+    InnerAvlTree<T> *leftRotate() {
         if (rightSon == nullptr)return this;
         InnerAvlTree<T> *newRightSon = rightSon;
         newRightSon->father = father;
@@ -129,12 +132,15 @@ private:
         if (newRightSon->father != nullptr) {
             newRightSon->father->updateHeight();
         }
-        newRightSon->innerSize =
-                2 + newRightSon->rightSon->innerSize + newRightSon->leftSon->innerSize + leftSon->innerSize;
+        newRightSon->size =
+                2 +
+                FIELD_OR_DEFAULT(newRightSon->rightSon, size, 0) +
+                FIELD_OR_DEFAULT(newRightSon->leftSon, size, 0) +
+                FIELD_OR_DEFAULT(leftSon, size, 0);
         return newRightSon;
     }
 
-    InnerAvlTree<T> *Right_rotate() {
+    InnerAvlTree<T> *rightRotate() {
         if (leftSon == nullptr) return this;
         InnerAvlTree<T> *newLeftSon = leftSon;
         newLeftSon->father = father;
@@ -152,12 +158,13 @@ private:
         newLeftSon->updateHeight();
         if (newLeftSon->father != nullptr)
             newLeftSon->father->updateHeight();
-        newLeftSon->innerSize =
-                2 + newLeftSon->leftSon->innerSize + newLeftSon->rightSon->innerSize + rightSon->innerSize;
+        newLeftSon->size =
+                2 +
+                FIELD_OR_DEFAULT(newLeftSon->leftSon, size, 0) +
+                FIELD_OR_DEFAULT(newLeftSon->rightSon, size, 0) +
+                FIELD_OR_DEFAULT(rightSon, size, 0);
         return newLeftSon;
-
     }
-
 
 public:
     void nullifyFather() {
@@ -182,28 +189,27 @@ public:
         int balanceF = balanceFactor();
         if (balanceF > 1) {
             if (leftSon->balanceFactor() >= 0) {
-                return Right_rotate();
+                return rightRotate();
             } else if (leftSon->balanceFactor() == -1) {
-                leftSon = leftSon->Left_rotate();
-                return Right_rotate();
+                leftSon = leftSon->leftRotate();
+                return rightRotate();
             }
         }
         if (balanceF < -1) {
             if (rightSon->balanceFactor() <= 0) {
-                return Left_rotate();
+                return leftRotate();
             } else if (rightSon->balanceFactor() == 1) {
-                rightSon = rightSon->Right_rotate();
-                return Left_rotate();
+                rightSon = rightSon->rightRotate();
+                return leftRotate();
             }
         }
         return this;
     }
 
     InnerAvlTree<T> *insert(T x) {
-        if (x == data)
-            throw AlreadyExist();
+        assert(x != data);
+        size++;
         if (x > data) {
-            innerSize++;
             if (rightSon == nullptr) {
                 rightSon = new InnerAvlTree<T>(x);
                 rightSon->father = this;
@@ -211,8 +217,8 @@ public:
             } else {
                 return rightSon->insert(x);
             }
-        } else if (x < data) {
-            innerSize++;
+        } else {
+            assert(x < data);
             if (leftSon == nullptr) {
                 leftSon = new InnerAvlTree<T>(x);
                 leftSon->father = this;
@@ -221,9 +227,6 @@ public:
                 return leftSon->insert(x);
             }
         }
-        updateHeight();
-        setMax();
-        return this;
     }
 
     T &find(const T &info) {
@@ -239,10 +242,11 @@ public:
         return vec;
     }
 
-    void updateInnerSize() {
-        innerSize = 1 + (leftSon == nullptr ? 0 : leftSon->innerSize) + (rightSon == nullptr ? 0 : rightSon->innerSize);
+    void updateSize() {
+        validatePointers();
+        size = 1 + FIELD_OR_DEFAULT(leftSon, size, 0) + FIELD_OR_DEFAULT(rightSon, size, 0);
         if (father != nullptr)
-            father->updateInnerSize();
+            father->updateSize();
     }
 
 //todo: update inner size is needed here
@@ -278,13 +282,14 @@ public:
             rightSon = nullptr;
             leftSon = nullptr;
             InnerAvlTree<T> *fatherToUpdate = next->father;
+            next->father = father;
+            next->updateSize();
             while (fatherToUpdate != nullptr && fatherToUpdate != this && fatherToUpdate != next) {
                 fatherToUpdate->updateHeight();
                 fatherToUpdate = fatherToUpdate->balance();
-                fatherToUpdate->updateInnerSize();//??
+                fatherToUpdate->updateSize();
                 fatherToUpdate = fatherToUpdate->father;
             }
-            next->father = father;
             return next;
         }
         if (data > info) {
@@ -298,11 +303,11 @@ public:
                 leftSon->updateHeight();
                 leftSon->father = this;
                 leftSon = leftSon->balance();
-                leftSon->updateInnerSize();
+                leftSon->updateSize();
             }
             updateHeight();
             auto toReturn = balance();
-            updateInnerSize();
+            updateSize();
             return toReturn;
         }
         if (rightSon == nullptr)
@@ -315,22 +320,13 @@ public:
             rightSon->updateHeight();
             rightSon->father = this;
             rightSon = rightSon->balance();
-            rightSon->updateInnerSize();
+            rightSon->updateSize();
         }
         updateHeight();
         auto toReturn = balance();
-        updateInnerSize();
+        updateSize();
         return toReturn;
     }
-
-    bool notExists(InnerAvlTree<T> *check) const {
-        if (rightSon != nullptr)
-            rightSon->notExists(check);
-        if (leftSon != nullptr)
-            leftSon->notExists(check);
-        return true;
-    }
-
 
     void getNLowest(int n, my_vector<T> *vec) {
         if (vec->size() == n)
@@ -353,12 +349,102 @@ public:
         return counter;
     }
 
+    void validateHeight() {
+        ASSERT_SON(leftSon, validateHeight);
+        ASSERT_SON(rightSon, validateHeight);
+        ASSERT_EQUALS(std::max(FIELD_OR_DEFAULT(leftSon, height, -1), FIELD_OR_DEFAULT(rightSon, height, -1)) + 1,
+                      height);
+    }
 
+    void validateSize() {
+        ASSERT_SON(leftSon, validateSize);
+        ASSERT_SON(rightSon, validateSize);
+        ASSERT_EQUALS(FIELD_OR_DEFAULT(leftSon, size, 0) + FIELD_OR_DEFAULT(rightSon, size, 0) + 1, size);
+    }
+
+    void validateBalance() {
+        ASSERT_SON(leftSon, validateBalance);
+        ASSERT_SON(rightSon, validateBalance);
+        int leftHeight = FIELD_OR_DEFAULT(leftSon, height, -1);
+        int rightHeight = FIELD_OR_DEFAULT(rightSon, height, -1);
+        if (abs(leftHeight - rightHeight) > 1) {
+            std::cout << "Unbalanced tree; left height: " << leftHeight << "; right height: " << rightHeight
+                      << std::endl;
+            assert(0);
+        }
+    }
+
+    void validateUnique() {
+        auto vec = inOrder();
+        for (int i = 0; i < vec.size() - 1; ++i) {
+            if (false == (*(vec.at(i)) < *(vec.at(i + 1)))) {
+                debugTree(0);
+                cout << vec << endl;
+            }
+        }
+    }
+
+    void validateFathers() {
+        if (father != nullptr)
+            father->validateFathers();
+    }
+
+    void validatePointers() {
+        validateFathers();
+        if (leftSon != nullptr) {
+            leftSon->validatePointers();
+            leftSon->father == this;
+        }
+        if (rightSon != nullptr) {
+            rightSon->validatePointers();
+            rightSon->father == this;
+        }
+    }
+
+    void validate() {
+        validateHeight();
+        validateSize();
+        validateBalance();
+        validateUnique();
+        validatePointers();
+    }
+
+    void debugTree(int depth) {
+        for (int i = 0; i < depth; ++i) {
+            cout << "  ";
+        }
+        cout << data << endl;
+        if (leftSon != nullptr) {
+            for (int i = 0; i < depth; ++i) {
+                cout << "  ";
+            }
+            cout << "Left son" << endl;
+            leftSon->debugTree(depth + 1);
+        }
+        if (rightSon != nullptr) {
+            for (int i = 0; i < depth; ++i) {
+                cout << "  ";
+            }
+            cout << "Right son" << endl;
+            rightSon->debugTree(depth + 1);
+        }
+    }
+
+    bool exists(const T& x) {
+        return internalFind(x) != nullptr;
+    }
 };
 
 template<class T>
 class RankTree {
     InnerAvlTree<T> *tree;
+
+    void validate() {
+        if (tree) {
+            tree->validate();
+            tree->getFather() == nullptr;
+        }
+    }
 
 public:
     RankTree() {
@@ -385,10 +471,12 @@ public:
             tree = new InnerAvlTree<T>(x);
             return;
         }
-
+        if (tree->exists(x))
+            throw AlreadyExist();
         auto inserted = tree->insert(x);
         balance(inserted);
         tree->setMax();
+        validate();
     }
 
 
@@ -428,6 +516,7 @@ public:
             tree->updateHeight();
             tree->setMax();
         }
+        validate();
     }
 
     void recursiveAvl(my_vector<T> &vector) {
@@ -447,6 +536,7 @@ public:
             current->updateHeight();
         }
         tree = current;
+        validate();
     }
 
     my_vector<T> getNLowest(int n) {
@@ -456,6 +546,13 @@ public:
         return vec;
     }
 
+    void debugTree() {
+        if (tree == nullptr) {
+            cout << "null" << endl;
+            return;
+        }
+        tree->debugTree(0);
+    }
     bool isEmpty() {
         return tree == nullptr;
     }
@@ -485,7 +582,5 @@ public:
         return res;
     }
 };
-
-
 
 #endif
