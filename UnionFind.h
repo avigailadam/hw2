@@ -4,14 +4,17 @@
 
 #ifndef HW1_UNIONFIND_H
 #define HW1_UNIONFIND_H
+
 #include <iostream>
 #include "exceptions.h"
 #include "RankTree.h"
+#include "player.h"
+
 #define EMPTY -1
 //todo: ranktree should contain levelzero counter
 
 class Group {
-    RankTree<player> *scoresArray;
+    RankTree<playerByLevel>* scoresArray;
     int scale;
     bool isEmpty;
     int size;
@@ -19,29 +22,38 @@ class Group {
 
 
 public:
-    Group(int scale) : scale(scale), isEmpty(true),size(0) {
-        scoresArray = new RankTree[scale];
-        for (int i = 0; i < scale; ++i) {
-            scoresArray[i] = nullptr;
-        }
+    Group(int scale) : scale(scale), isEmpty(true), size(0), scoresArray(new RankTree<playerByLevel>[scale]) {
     }
 
     ~Group() {
-        for (int i = 0; i < scale; ++i)
-            delete scoresArray[i];
         delete[] scoresArray;
     }
 
-    void mergeGroups(Group &otherGroup){
+    void insertPlayer(playerByLevel player){
+        int level=player.getLevel();
+        if(level ==0) {
+            levelZeroCounter++;
+            return;
+        }
+        scoresArray[player.getScore()].insert(player);
+        size++;
+
+    }
+
+    void mergeGroups(Group &otherGroup) {
         for (int i = 0; i < scale; ++i)
             scoresArray[i].merge(otherGroup.scoresArray[i]);
-        size+=otherGroup.size;
-         otherGroup.size=1;
+        size += otherGroup.size;
+        otherGroup.size = 1;
     }
-    int getSize(){
+
+    int getSize() {
         return size;
     }
+
+
 };
+
 //class Group{
 //    int size;
 //    int num;
@@ -71,7 +83,7 @@ public:
 //    }
 //};
 class UnionFind {
-    Group** groups;
+    Group **groups;
     int *parent;
     int numOfGroups;
 
@@ -86,7 +98,7 @@ class UnionFind {
 
 public:
     UnionFind(int k, int scale) : numOfGroups(k) {
-        groups = new Group*[k];
+        groups = new Group *[k];
         parent = new int[k];
         if (!groups || !parent) {
             delete[] groups;
@@ -108,18 +120,17 @@ public:
     }
 
     void Union(int A, int B) {
-        int groupA= find(A);
-        int groupB= find(B);
-        if(groupA==groupB)
+        int groupA = find(A);
+        int groupB = find(B);
+        if (groupA == groupB)
             return;
         if (groups[groupA]->getSize() < groups[groupB]->getSize()) {
             parent[groupA] = groupB;
             groups[groupB]->mergeGroups(*groups[groupA]);
-        }
-            else{
+        } else {
             parent[groupB] = groupA;
-                groups[groupA]->mergeGroups(*groups[groupB]);
-            }
+            groups[groupA]->mergeGroups(*groups[groupB]);
+        }
 
     }
 
@@ -138,10 +149,10 @@ public:
     }
 
 
-
-    friend std::ostream &operator<<(std::ostream &os, const UnionFind& current) {
+    friend std::ostream &operator<<(std::ostream &os, const UnionFind &current) {
         for (int i = 0; i < current.numOfGroups; ++i) {
-            os << i << " is son of " << current.parent[i] << " his size is: " << current.groups[i]->getSize() << std::endl;
+            os << i << " is son of " << current.parent[i] << " his size is: " << current.groups[i]->getSize()
+               << std::endl;
         }
         os << std::endl;
         return os;

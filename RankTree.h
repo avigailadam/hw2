@@ -58,7 +58,7 @@ public:
         delete rightSon;
         delete leftSon;
     }
-//todo: update innerSize needed in vec const'
+
     explicit InnerAvlTree(my_vector<T> &vector) : data(vector.at(vector.size() / 2)), height(0), father(nullptr) {
         int size = vector.size();
         my_vector<T> rightVec = sliceVec(vector, (size / 2) + 1, size - 1);
@@ -70,9 +70,11 @@ public:
         height = std::max(leftHeight, rightHeight) + 1;
         if (rightSon != nullptr) {
             rightSon->father = this;
+            innerSize += rightSon->innerSize;
         }
         if (leftSon != nullptr) {
             leftSon->father = this;
+            innerSize += leftSon->innerSize;
         }
 
         updateHeight();
@@ -238,7 +240,7 @@ public:
     }
 
     void updateInnerSize() {
-        innerSize = 1 + (leftSon == nullptr? 0: leftSon->innerSize) +  (rightSon == nullptr? 0: rightSon->innerSize);
+        innerSize = 1 + (leftSon == nullptr ? 0 : leftSon->innerSize) + (rightSon == nullptr ? 0 : rightSon->innerSize);
         if (father != nullptr)
             father->updateInnerSize();
     }
@@ -454,6 +456,36 @@ public:
         return vec;
     }
 
+    bool isEmpty() {
+        return tree == nullptr;
+    }
+
+    void merge(RankTree<T> &other) {
+        my_vector<T *> vec1 = tree->inOrder();
+        my_vector<T *> vec2 = other.tree->inOrder();
+        my_vector<T> merged = merge(vec1, vec2);
+        delete tree;
+        tree(merged);
+    }
+    my_vector<T> merge(my_vector<T *> v1, my_vector<T *> v2) {
+        my_vector<T> res(v1.size() + v2.size());
+        auto i1 = 0;
+        auto i2 = 0;
+        while (i1 < v1.size() || i2 < v2.size()) {
+            if (i1 != v1.size() && (i2 == v2.size() || *v1.at(i1) < *v2.at(i2))) {
+                T *pLevel = v1.at(i1);
+                res.push_back(*pLevel);
+                i1++;
+                continue;
+            }
+            T *pLevel = v2.at(i2);
+            res.push_back(*pLevel);
+            i2++;
+        }
+        return res;
+    }
 };
+
+
 
 #endif
