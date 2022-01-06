@@ -132,11 +132,6 @@ private:
         if (newRightSon->father != nullptr) {
             newRightSon->father->updateHeight();
         }
-        newRightSon->size =
-                2 +
-                FIELD_OR_DEFAULT(newRightSon->rightSon, size, 0) +
-                FIELD_OR_DEFAULT(newRightSon->leftSon, size, 0) +
-                FIELD_OR_DEFAULT(leftSon, size, 0);
         return newRightSon;
     }
 
@@ -158,11 +153,6 @@ private:
         newLeftSon->updateHeight();
         if (newLeftSon->father != nullptr)
             newLeftSon->father->updateHeight();
-        newLeftSon->size =
-                2 +
-                FIELD_OR_DEFAULT(newLeftSon->leftSon, size, 0) +
-                FIELD_OR_DEFAULT(newLeftSon->rightSon, size, 0) +
-                FIELD_OR_DEFAULT(rightSon, size, 0);
         return newLeftSon;
     }
 
@@ -189,18 +179,50 @@ public:
         int balanceF = balanceFactor();
         if (balanceF > 1) {
             if (leftSon->balanceFactor() >= 0) {
-                return rightRotate();
+                InnerAvlTree<T> *tmp = rightRotate();
+                size = FIELD_OR_DEFAULT(rightSon, size, 0) +
+                       FIELD_OR_DEFAULT(leftSon, size, 0) + 1;
+                tmp->size = size + FIELD_OR_DEFAULT(tmp->leftSon, size, 0) + 1;
+                return tmp;
             } else if (leftSon->balanceFactor() == -1) {
                 leftSon = leftSon->leftRotate();
-                return rightRotate();
+                InnerAvlTree<T> *tmp = rightRotate();
+                if (tmp->rightSon != nullptr) {
+                    tmp->rightSon->size = FIELD_OR_DEFAULT(tmp->rightSon->rightSon, size, 0) +
+                                          FIELD_OR_DEFAULT(tmp->rightSon->leftSon, size, 0) + 1;
+                }
+                int rightSize = (tmp->rightSon != nullptr) ? tmp->rightSon->size : 0;
+                if (tmp->leftSon != nullptr) {
+                    tmp->leftSon->size = FIELD_OR_DEFAULT(tmp->leftSon->rightSon, size, 0) +
+                                         FIELD_OR_DEFAULT(tmp->leftSon->leftSon, size, 0) + 1;
+                }
+                int leftSize = (tmp->leftSon != nullptr) ? tmp->leftSon->size : 0;
+                tmp->size = 1 + leftSize + rightSize;
+                return tmp;
             }
         }
         if (balanceF < -1) {
             if (rightSon->balanceFactor() <= 0) {
-                return leftRotate();
+                InnerAvlTree<T> *tmp = leftRotate();
+                size = FIELD_OR_DEFAULT(rightSon, size, 0) +
+                       FIELD_OR_DEFAULT(leftSon, size, 0) + 1;
+                tmp->size = size + FIELD_OR_DEFAULT(tmp->rightSon, size, 0) + 1;
+                return tmp;
             } else if (rightSon->balanceFactor() == 1) {
                 rightSon = rightSon->rightRotate();
-                return leftRotate();
+                InnerAvlTree<T> *tmp = leftRotate();
+                if (tmp->rightSon != nullptr) {
+                    tmp->rightSon->size = FIELD_OR_DEFAULT(tmp->rightSon->rightSon, size, 0) +
+                                          FIELD_OR_DEFAULT(tmp->rightSon->leftSon, size, 0) + 1;
+                }
+                int rightSize = (tmp->rightSon != nullptr) ? tmp->rightSon->size : 0;
+                if (tmp->leftSon != nullptr) {
+                    tmp->leftSon->size = FIELD_OR_DEFAULT(tmp->leftSon->rightSon, size, 0) +
+                                         FIELD_OR_DEFAULT(tmp->leftSon->leftSon, size, 0) + 1;
+                }
+                int leftSize = (tmp->leftSon != nullptr) ? tmp->leftSon->size : 0;
+                tmp->size = 1 + leftSize + rightSize;
+                return tmp;
             }
         }
         return this;
@@ -430,7 +452,7 @@ public:
         }
     }
 
-    bool exists(const T& x) {
+    bool exists(const T &x) {
         return internalFind(x) != nullptr;
     }
 };
@@ -553,6 +575,7 @@ public:
         }
         tree->debugTree(0);
     }
+
     bool isEmpty() {
         return tree == nullptr;
     }
@@ -564,6 +587,7 @@ public:
         delete tree;
         tree(merged);
     }
+
     my_vector<T> merge(my_vector<T *> v1, my_vector<T *> v2) {
         my_vector<T> res(v1.size() + v2.size());
         auto i1 = 0;
