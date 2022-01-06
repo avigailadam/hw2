@@ -15,7 +15,9 @@ int main() {
         cout << "====" << i << "====" << endl;
         tree.debugTree();
         try {
-            int x = rand() % 10;
+            int y = rand() % 10;
+            int z = rand() % 10;
+            Hagai x(y, z);
             switch (action) {
                 case 0:
                     cout << "inserting: " << x << endl;

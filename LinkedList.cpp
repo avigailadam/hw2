@@ -8,7 +8,7 @@
 
 void LinkedList::remove(int playerId) {
     const_iterator before = begin();
-    if (*before == playerId) {
+    if ((*before).getId() == playerId) {
         head = before.current_node->next;
         delete before.current_node;
         size--;
@@ -16,7 +16,7 @@ void LinkedList::remove(int playerId) {
     }
     const_iterator current = before++;
     while (current != end()) {
-        if (*current != playerId) {
+        if ((*current).getId() != playerId) {
             before = current++;
             continue;
         }
@@ -81,7 +81,7 @@ void LinkedList::insert(int playerId, int groupId, int score) {
     }
     const_iterator current = begin();
     while (current != end()) {
-        if (*current == playerId) {
+        if ((*current).getId() == playerId) {
             delete new_node;
             return;
         }
@@ -96,7 +96,7 @@ void LinkedList::insert(int playerId, int groupId, int score) {
 
 std::ostream &operator<<(std::ostream &os, const LinkedList &list) {
     for (typename LinkedList::const_iterator i = list.begin(); i != list.end(); ++i) {
-        os << "Player: " << *i << ", Group: " << i.getGroup() << ", Score: " << i.getScore() << ". ";
+        os << "Player: " << (*i).getId() << ", Group: " << (*i).getGroupId() << ", Score: " << (*i).getScore() << ". ";
     }
     os << std::endl;
     return os;

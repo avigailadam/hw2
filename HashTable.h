@@ -39,9 +39,7 @@ public:
 
     bool exists(int playerID);
 
-    int getPlayerGroup(int playerID);
-
-    int getPlayerScore(int playerID);
+    PlayerByID& getPlayer(int playerID);
 
     friend std::ostream &operator<<(std::ostream &os, const HashTable &hash);
 };

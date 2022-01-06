@@ -4,12 +4,20 @@
 
 #ifndef HW2_GAME_H
 #define HW2_GAME_H
+#include "HashTable.h"
+#include "UnionFind.h"
 
 
 class Game {
+    int k;
+    int scale;
+    HashTable* players;
+    UnionFind* groups;
 public:
+    Game(int k, int scale);
+
     void mergeGroups(int group1ID, int group2ID);
-    void addPlayer(int playerID, int GroupID, int score);
+    void addPlayer(int playerID, int groupId, int score);
     void removePlayer(int playerID);
     void increasePlayerLevel(int playerID, int levelIncrease);
     void changePlayerScore(int playerID, int newScore);

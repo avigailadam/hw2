@@ -62,8 +62,8 @@ void HashTable::rehash(int prevSize) {
     auto *newTable = new LinkedList[maxSize];
     for (int i = 0; i < prevSize; ++i) {
         LinkedList *currList = &table[i];
-        for (LinkedList::const_iterator it = currList->begin(); it != currList->end(); it++)
-            newTable[hash(*it)].insert(*it, it.getGroup(), it.getScore());
+        for (auto it : *currList)
+            newTable[hash(it.getId())].insert(it.getId(), it.getGroupId(), it.getScore());
     }
     delete[] table;
     table = newTable;
@@ -73,26 +73,18 @@ int HashTable::hash(int num) const {
     return (num % modulo) % maxSize;
 }
 
-int HashTable::getPlayerGroup(int playerID) {
+PlayerByID& HashTable::getPlayer(int playerID) {
     LinkedList *list = &table[hash(playerID)];
     for (LinkedList::const_iterator it = list->begin(); it != list->end(); it++)
-        if (*it == playerID)
-            return it.getGroup();
-    throw NotExist();
-}
-
-int HashTable::getPlayerScore(int playerID) {
-    LinkedList *list = &table[hash(playerID)];
-    for (LinkedList::const_iterator it = list->begin(); it != list->end(); it++)
-        if (*it == playerID)
-            return it.getScore();
+        if ((*it).getId() == playerID)
+            return *it;
     throw NotExist();
 }
 
 bool HashTable::exists(int playerID) {
     LinkedList *list = &table[hash(playerID)];
     for (LinkedList::const_iterator it = list->begin(); it != list->end(); it++)
-        if (*it == playerID)
+        if ((*it).getId() == playerID)
             return true;
     return false;
 }

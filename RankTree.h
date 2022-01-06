@@ -22,17 +22,19 @@ my_vector<T> sliceVec(my_vector<T> &vector, int start, int end) {
 
 
 template<class T>
-class InnerAvlTree {
+class InnerRankTree {
     T data;
-    InnerAvlTree<T> *max;
+    InnerRankTree<T> *max;
     int height;
     int size;
-    InnerAvlTree<T> *father;
-    InnerAvlTree<T> *rightSon;
-    InnerAvlTree<T> *leftSon;
+    int sum;
+    int selfSum;
+    InnerRankTree<T> *father;
+    InnerRankTree<T> *rightSon;
+    InnerRankTree<T> *leftSon;
 
 
-    void inOrderAux(InnerAvlTree<T> *root, my_vector<T *> &vec) {
+    void inOrderAux(InnerRankTree<T> *root, my_vector<T *> &vec) {
         if (root == nullptr) return;
         inOrderAux(root->leftSon, vec);
         vec.push_back(&(root->data));
@@ -41,43 +43,47 @@ class InnerAvlTree {
 
 public:
 
-    explicit InnerAvlTree(T x) : data(x) {
+    explicit InnerRankTree(T x) : data(x) {
         father = nullptr;
         rightSon = nullptr;
         leftSon = nullptr;
         max = this;
         height = 0;
         size = 1;
+        sum = x.getSum();
+        selfSum = x.getSum();
     }
 
 
-    InnerAvlTree<T> *getFather() {
+    InnerRankTree<T> *getFather() {
         return father;
     }
 
-    ~InnerAvlTree() {
+    ~InnerRankTree() {
         delete rightSon;
         delete leftSon;
     }
 
 //todo: update size needed in vec const'
 
-    explicit InnerAvlTree(my_vector<T> &vector) : data(vector.at(vector.size() / 2)), height(0), father(nullptr) {
+    explicit InnerRankTree(my_vector<T> &vector) : data(vector.at(vector.size() / 2)), height(0), father(nullptr) {
         int size = vector.size();
         my_vector<T> rightVec = sliceVec(vector, (size / 2) + 1, size - 1);
-        rightSon = rightVec.empty() ? nullptr : new InnerAvlTree<T>(rightVec);
+        rightSon = rightVec.empty() ? nullptr : new InnerRankTree<T>(rightVec);
         int rightHeight = rightSon == nullptr ? -1 : rightSon->height;
         my_vector<T> leftVec = sliceVec(vector, 0, (size / 2) - 1);
-        leftSon = leftVec.empty() ? nullptr : new InnerAvlTree<T>(leftVec);
+        leftSon = leftVec.empty() ? nullptr : new InnerRankTree<T>(leftVec);
         int leftHeight = leftSon == nullptr ? -1 : leftSon->height;
         height = std::max(leftHeight, rightHeight) + 1;
         if (rightSon != nullptr) {
             rightSon->father = this;
             size += rightSon->size;
+            sum += rightSon->sum;
         }
         if (leftSon != nullptr) {
             leftSon->father = this;
             size += leftSon->size;
+            sum += leftSon->sum;
         }
 
         updateHeight();
@@ -90,7 +96,7 @@ public:
             max = max->rightSon;
     }
 
-    InnerAvlTree<T> *getMax() const {
+    InnerRankTree<T> *getMax() const {
         return max;
     }
 
@@ -113,15 +119,15 @@ private:
         return leftHeight - rightHeight;
     }
 
-    InnerAvlTree<T> *leftRotate() {
+    InnerRankTree<T> *leftRotate() {
         if (rightSon == nullptr)return this;
-        InnerAvlTree<T> *newRightSon = rightSon;
+        InnerRankTree<T> *newRightSon = rightSon;
         newRightSon->father = father;
         if (father != nullptr) {
             father->rightSon == this ? father->rightSon = newRightSon : father->leftSon = newRightSon;
             father->updateHeight();
         }
-        InnerAvlTree<T> *temp = newRightSon->leftSon;
+        InnerRankTree<T> *temp = newRightSon->leftSon;
         if (temp != nullptr)
             temp->father = this;
         father = newRightSon;
@@ -135,15 +141,15 @@ private:
         return newRightSon;
     }
 
-    InnerAvlTree<T> *rightRotate() {
+    InnerRankTree<T> *rightRotate() {
         if (leftSon == nullptr) return this;
-        InnerAvlTree<T> *newLeftSon = leftSon;
+        InnerRankTree<T> *newLeftSon = leftSon;
         newLeftSon->father = father;
         if (father != nullptr) {
             father->leftSon == this ? father->leftSon = newLeftSon : father->rightSon = newLeftSon;
             father->updateHeight();
         }
-        InnerAvlTree<T> *temp = newLeftSon->rightSon;
+        InnerRankTree<T> *temp = newLeftSon->rightSon;
         if (temp != nullptr)
             temp->father = this;
         father = newLeftSon;
@@ -161,7 +167,7 @@ public:
         father = nullptr;
     }
 
-    InnerAvlTree<T> *internalFind(const T &info) {
+    InnerRankTree<T> *internalFind(const T &info) {
         if (data == info) {
             return this;
         }
@@ -175,65 +181,86 @@ public:
     }
 
 
-    InnerAvlTree<T> *balance() {
+    InnerRankTree<T> *balance() {
         int balanceF = balanceFactor();
         if (balanceF > 1) {
             if (leftSon->balanceFactor() >= 0) {
-                InnerAvlTree<T> *tmp = rightRotate();
+                InnerRankTree<T> *tmp = rightRotate();
                 size = FIELD_OR_DEFAULT(rightSon, size, 0) +
                        FIELD_OR_DEFAULT(leftSon, size, 0) + 1;
                 tmp->size = size + FIELD_OR_DEFAULT(tmp->leftSon, size, 0) + 1;
+                sum = FIELD_OR_DEFAULT(rightSon, sum, 0) +
+                      FIELD_OR_DEFAULT(leftSon, sum, 0) + selfSum;
+                tmp->sum = sum + FIELD_OR_DEFAULT(tmp->leftSon, sum, 0) + tmp->selfSum;
                 return tmp;
             } else if (leftSon->balanceFactor() == -1) {
                 leftSon = leftSon->leftRotate();
-                InnerAvlTree<T> *tmp = rightRotate();
+                InnerRankTree<T> *tmp = rightRotate();
                 if (tmp->rightSon != nullptr) {
                     tmp->rightSon->size = FIELD_OR_DEFAULT(tmp->rightSon->rightSon, size, 0) +
                                           FIELD_OR_DEFAULT(tmp->rightSon->leftSon, size, 0) + 1;
+                    tmp->rightSon->sum = FIELD_OR_DEFAULT(tmp->rightSon->rightSon, sum, 0) +
+                                         FIELD_OR_DEFAULT(tmp->rightSon->leftSon, sum, 0) + tmp->rightSon->selfSum;
                 }
                 int rightSize = (tmp->rightSon != nullptr) ? tmp->rightSon->size : 0;
+                int rightSum = (tmp->rightSon != nullptr) ? tmp->rightSon->sum : 0;
                 if (tmp->leftSon != nullptr) {
                     tmp->leftSon->size = FIELD_OR_DEFAULT(tmp->leftSon->rightSon, size, 0) +
                                          FIELD_OR_DEFAULT(tmp->leftSon->leftSon, size, 0) + 1;
+                    tmp->leftSon->sum = FIELD_OR_DEFAULT(tmp->leftSon->rightSon, sum, 0) +
+                                        FIELD_OR_DEFAULT(tmp->leftSon->leftSon, sum, 0) + tmp->leftSon->selfSum;
                 }
                 int leftSize = (tmp->leftSon != nullptr) ? tmp->leftSon->size : 0;
+                int leftSum = (tmp->leftSon != nullptr) ? tmp->leftSon->sum : 0;
                 tmp->size = 1 + leftSize + rightSize;
+                tmp->sum = tmp->selfSum + leftSum + rightSum;
                 return tmp;
             }
         }
         if (balanceF < -1) {
             if (rightSon->balanceFactor() <= 0) {
-                InnerAvlTree<T> *tmp = leftRotate();
+                InnerRankTree<T> *tmp = leftRotate();
                 size = FIELD_OR_DEFAULT(rightSon, size, 0) +
                        FIELD_OR_DEFAULT(leftSon, size, 0) + 1;
                 tmp->size = size + FIELD_OR_DEFAULT(tmp->rightSon, size, 0) + 1;
+                sum = FIELD_OR_DEFAULT(rightSon, sum, 0) +
+                      FIELD_OR_DEFAULT(leftSon, sum, 0) + selfSum;
+                tmp->sum = sum + FIELD_OR_DEFAULT(tmp->rightSon, sum, 0) + tmp->selfSum;
                 return tmp;
             } else if (rightSon->balanceFactor() == 1) {
                 rightSon = rightSon->rightRotate();
-                InnerAvlTree<T> *tmp = leftRotate();
+                InnerRankTree<T> *tmp = leftRotate();
                 if (tmp->rightSon != nullptr) {
                     tmp->rightSon->size = FIELD_OR_DEFAULT(tmp->rightSon->rightSon, size, 0) +
                                           FIELD_OR_DEFAULT(tmp->rightSon->leftSon, size, 0) + 1;
+                    tmp->rightSon->sum = FIELD_OR_DEFAULT(tmp->rightSon->rightSon, sum, 0) +
+                                         FIELD_OR_DEFAULT(tmp->rightSon->leftSon, sum, 0) + tmp->rightSon->selfSum;
                 }
                 int rightSize = (tmp->rightSon != nullptr) ? tmp->rightSon->size : 0;
+                int rightSum = (tmp->rightSon != nullptr) ? tmp->rightSon->sum : 0;
                 if (tmp->leftSon != nullptr) {
                     tmp->leftSon->size = FIELD_OR_DEFAULT(tmp->leftSon->rightSon, size, 0) +
                                          FIELD_OR_DEFAULT(tmp->leftSon->leftSon, size, 0) + 1;
+                    tmp->leftSon->sum = FIELD_OR_DEFAULT(tmp->leftSon->rightSon, sum, 0) +
+                                        FIELD_OR_DEFAULT(tmp->leftSon->leftSon, sum, 0) + tmp->leftSon->selfSum;
                 }
                 int leftSize = (tmp->leftSon != nullptr) ? tmp->leftSon->size : 0;
+                int leftSum = (tmp->leftSon != nullptr) ? tmp->leftSon->sum : 0;
                 tmp->size = 1 + leftSize + rightSize;
+                tmp->sum = tmp->selfSum + leftSum + rightSum;
                 return tmp;
             }
         }
         return this;
     }
 
-    InnerAvlTree<T> *insert(T x) {
+    InnerRankTree<T> *insert(T x) {
         assert(x != data);
         size++;
+        sum += x.getSum();
         if (x > data) {
             if (rightSon == nullptr) {
-                rightSon = new InnerAvlTree<T>(x);
+                rightSon = new InnerRankTree<T>(x);
                 rightSon->father = this;
                 return rightSon;
             } else {
@@ -242,7 +269,7 @@ public:
         } else {
             assert(x < data);
             if (leftSon == nullptr) {
-                leftSon = new InnerAvlTree<T>(x);
+                leftSon = new InnerRankTree<T>(x);
                 leftSon->father = this;
                 return leftSon;
             } else {
@@ -252,7 +279,7 @@ public:
     }
 
     T &find(const T &info) {
-        InnerAvlTree<T> *result = internalFind(info);
+        InnerRankTree<T> *result = internalFind(info);
         if (result == nullptr)
             throw NotExist();
         return result->data;
@@ -264,15 +291,16 @@ public:
         return vec;
     }
 
-    void updateSize() {
+    void updateSizeAndSum() {
         validatePointers();
         size = 1 + FIELD_OR_DEFAULT(leftSon, size, 0) + FIELD_OR_DEFAULT(rightSon, size, 0);
+
+        sum = selfSum + FIELD_OR_DEFAULT(leftSon, sum, 0) + FIELD_OR_DEFAULT(rightSon, sum, 0);
         if (father != nullptr)
-            father->updateSize();
+            father->updateSizeAndSum();
     }
 
-//todo: update inner size is needed here
-    InnerAvlTree<T> *remove(const T &info) {
+    InnerRankTree<T> *remove(const T &info) {
         if (data == info) {
             auto next = rightSon;
             if (next == nullptr) {
@@ -289,7 +317,7 @@ public:
                 next->father->leftSon = next->rightSon;
                 next->rightSon = rightSon;
 
-                InnerAvlTree<T> *fatherToUpdate = next->father;
+                InnerRankTree<T> *fatherToUpdate = next->father;
                 while (fatherToUpdate != nullptr && fatherToUpdate != this) {
                     fatherToUpdate->updateHeight();
                     fatherToUpdate = fatherToUpdate->father;
@@ -303,13 +331,13 @@ public:
             next->updateHeight();
             rightSon = nullptr;
             leftSon = nullptr;
-            InnerAvlTree<T> *fatherToUpdate = next->father;
+            InnerRankTree<T> *fatherToUpdate = next->father;
             next->father = father;
-            next->updateSize();
+            next->updateSizeAndSum();
             while (fatherToUpdate != nullptr && fatherToUpdate != this && fatherToUpdate != next) {
                 fatherToUpdate->updateHeight();
                 fatherToUpdate = fatherToUpdate->balance();
-                fatherToUpdate->updateSize();
+                fatherToUpdate->updateSizeAndSum();
                 fatherToUpdate = fatherToUpdate->father;
             }
             return next;
@@ -325,11 +353,11 @@ public:
                 leftSon->updateHeight();
                 leftSon->father = this;
                 leftSon = leftSon->balance();
-                leftSon->updateSize();
+                leftSon->updateSizeAndSum();
             }
             updateHeight();
             auto toReturn = balance();
-            updateSize();
+            updateSizeAndSum();
             return toReturn;
         }
         if (rightSon == nullptr)
@@ -342,11 +370,11 @@ public:
             rightSon->updateHeight();
             rightSon->father = this;
             rightSon = rightSon->balance();
-            rightSon->updateSize();
+            rightSon->updateSizeAndSum();
         }
         updateHeight();
         auto toReturn = balance();
-        updateSize();
+        updateSizeAndSum();
         return toReturn;
     }
 
@@ -382,6 +410,12 @@ public:
         ASSERT_SON(leftSon, validateSize);
         ASSERT_SON(rightSon, validateSize);
         ASSERT_EQUALS(FIELD_OR_DEFAULT(leftSon, size, 0) + FIELD_OR_DEFAULT(rightSon, size, 0) + 1, size);
+    }
+
+    void validateSum() {
+        ASSERT_SON(leftSon, validateSum);
+        ASSERT_SON(rightSon, validateSum);
+        ASSERT_EQUALS(FIELD_OR_DEFAULT(leftSon, sum, 0) + FIELD_OR_DEFAULT(rightSon, sum, 0) + selfSum, sum);
     }
 
     void validateBalance() {
@@ -429,6 +463,7 @@ public:
         validateBalance();
         validateUnique();
         validatePointers();
+        validateSum();
     }
 
     void debugTree(int depth) {
@@ -455,11 +490,185 @@ public:
     bool exists(const T &x) {
         return internalFind(x) != nullptr;
     }
+
+    T &closestFromAbove(T &x) {
+        if (data == x)
+            return x;
+        if (data > x) {
+            if (leftSon == nullptr || leftSon->data < x)
+                return data;
+            assert(leftSon->data > x);
+            return leftSon->closestFromAbove(x);
+        }
+        assert(data < x);
+        if (rightSon == nullptr)
+            return data;
+        assert(rightSon != nullptr);
+        if (rightSon->data > x)
+            return rightSon->data;
+        return rightSon->closestFromAbove(x);
+    }
+
+    T &closestFromBelow(T &x) {
+        if (data == x)
+            return x;
+        if (data < x) {
+            if (rightSon == nullptr || rightSon->data > x)
+                return data;
+            assert(leftSon->data > x);
+            return rightSon->closestFromBelow(x);
+        }
+        assert(data > x);
+        if (leftSon == nullptr)
+            return data;
+        assert(rightSon != nullptr);
+        if (leftSon->data < x)
+            return leftSon->data;
+        return leftSon->closestFromBelow(x);
+    }
+
+    int totalSumOver(){
+        int fromFather = 0;
+        if (father != nullptr && father->data > data)
+            fromFather = father->totalSumOver();
+        return selfSum + FIELD_OR_DEFAULT(rightSon, sum, 0) + fromFather;
+    }
+
+    int totalSumUnder(){
+        int fromFather = 0;
+        if (father != nullptr && father->data < data)
+            fromFather = father->totalSumUnder();
+        return selfSum + FIELD_OR_DEFAULT(leftSon, sum, 0) + fromFather;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 };
 
 template<class T>
 class RankTree {
-    InnerAvlTree<T> *tree;
+    InnerRankTree<T> *tree;
 
     void validate() {
         if (tree) {
@@ -480,7 +689,7 @@ public:
     T getMax() const {
         if (tree == nullptr)
             throw NotExist();
-        InnerAvlTree<T> *maxNode = tree->getMax();
+        InnerRankTree<T> *maxNode = tree->getMax();
         return maxNode->getData();
     }
 
@@ -490,7 +699,7 @@ public:
 
     void insert(T x) {
         if (tree == nullptr) {
-            tree = new InnerAvlTree<T>(x);
+            tree = new InnerRankTree<T>(x);
             return;
         }
         if (tree->exists(x))
@@ -525,7 +734,7 @@ public:
         if (tree == nullptr)
             throw NotExist();
         bool willRootBeDeleted = info == tree->getData();
-        InnerAvlTree<T> *newTree = tree->remove(info);
+        InnerRankTree<T> *newTree = tree->remove(info);
         if (willRootBeDeleted) {
             if (newTree != nullptr) {
                 newTree->nullifyFather();
@@ -544,11 +753,11 @@ public:
     void recursiveAvl(my_vector<T> &vector) {
         if (vector.empty())
             return;
-        tree = new InnerAvlTree<T>(vector);
+        tree = new InnerRankTree<T>(vector);
     }
 
 
-    void balance(InnerAvlTree<T> *current) {
+    void balance(InnerRankTree<T> *current) {
         while (current != nullptr) {
             current = current->balance();
             if (current->getFather() == nullptr) {
@@ -579,15 +788,16 @@ public:
     bool isEmpty() {
         return tree == nullptr;
     }
+//todo tree null check
 
-    void merge(RankTree<T> &other) {
+    void merge(RankTree<T> *other) {
         my_vector<T *> vec1 = tree->inOrder();
-        my_vector<T *> vec2 = other.tree->inOrder();
+        my_vector<T *> vec2 = other->tree->inOrder();
         my_vector<T> merged = merge(vec1, vec2);
         delete tree;
         tree(merged);
     }
-
+//todo tree null check
     my_vector<T> merge(my_vector<T *> v1, my_vector<T *> v2) {
         my_vector<T> res(v1.size() + v2.size());
         auto i1 = 0;
@@ -604,6 +814,24 @@ public:
             i2++;
         }
         return res;
+    }
+
+    int totalSumOver(const T &x) {
+        if (tree == nullptr)
+            return -1;
+        T &info = tree->closestFromAbove(info);
+        if (info < x)
+            return 0;
+        return (tree->internalFind(info))->totalSumOver();
+    }
+
+    int totalSumUnder(const T &x){
+        if (tree == nullptr)
+            return -1;
+        T &info = tree->closestFromBelow(info);
+        if (info > x)
+            return 0;
+        return (tree->internalFind(info))->totalSumUnder();
     }
 };
 
