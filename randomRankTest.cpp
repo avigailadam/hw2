@@ -15,8 +15,8 @@ int main() {
         cout << "====" << i << "====" << endl;
         tree.debugTree();
         try {
-            int y = rand() % 10;
-            int z = rand() % 10;
+            int y = rand() % 10 + 1;
+            int z = rand() % 10 + 1;
             Hagai x(y, z);
             switch (action) {
                 case 0:

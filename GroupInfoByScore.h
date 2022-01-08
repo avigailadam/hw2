@@ -19,6 +19,10 @@ public:
         return playersCounterInNode;
     }
 
+    int getLevel(){
+        return level;
+    }
+
     LevelNode(const LevelNode &other) = default;
 
     void increaseCounter() {
