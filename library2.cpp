@@ -8,7 +8,7 @@
 void *Init(int k, int scale) {
     Game *DS;
     try {
-        DS = new DS(k, scale);
+        DS = new Game(k, scale);
     } catch (std::bad_alloc &e) {
         return nullptr;
     }
@@ -17,18 +17,20 @@ void *Init(int k, int scale) {
 
 
 StatusType MergeGroups(void *DS, int GroupID1, int GroupID2) {
-    if (DS == nullptr || GroupID1 <= 0 || GroupID2 <= 0 || GroupID1 > k || GroupID2 > k)
+    if (DS == nullptr)
         return INVALID_INPUT;
     try {
         ((Game *) DS)->mergeGroups(GroupID1, GroupID2);
-    } catch (std::bad_alloc &e) { return ALLOCATION_ERROR; }
-    return SUCCESS
+    }
+    catch (InvalidInput &res) { return INVALID_INPUT; }
+    catch (std::bad_alloc &e) { return ALLOCATION_ERROR; }
+    return SUCCESS;
 }
 
 StatusType AddPlayer(void *DS, int PlayerID, int GroupID, int score) {
     if (DS == nullptr) return INVALID_INPUT;
-    try { ((Game *) DS)->AddPlayer(PlayerID, GroupID, Level); }
-    catch (InvalidInput &res) { return INVALID_INPUT }
+    try { ((Game *) DS)->addPlayer(PlayerID, GroupID, score); }
+    catch (InvalidInput &res) { return INVALID_INPUT; }
     catch (std::bad_alloc &e) { return ALLOCATION_ERROR; }
     catch (AlreadyExist &res) { return FAILURE; }
     return SUCCESS;
@@ -64,8 +66,7 @@ StatusType GetPercentOfPlayersWithScoreInBounds(void *DS, int GroupID, int score
                                                 double *players) {
     if (DS == nullptr) return INVALID_INPUT;
     try {
-        *players = ((Game *) DS)->getPercentOfPlayersWithScoreInBounds(GroupID, score, lowerLevel, higherLevel,
-                                                                       players);
+        *players = ((Game *) DS)->getPercentOfPlayersWithScoreInBounds(GroupID, score, lowerLevel, higherLevel);
     }
     catch (InvalidInput &res) { return INVALID_INPUT; }
     catch (std::bad_alloc &e) { return ALLOCATION_ERROR; }

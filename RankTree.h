@@ -752,7 +752,8 @@ public:
         my_vector<T *> vec2 = other->tree->inOrder();
         my_vector<T> merged = merge(vec1, vec2);
         delete tree;
-        tree(merged);
+        InnerRankTree<T> *tmp(&merged);
+        tree = tmp;
     }
 
     int totalSumOver(const T &x) {
