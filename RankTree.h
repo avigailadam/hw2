@@ -92,16 +92,15 @@ public:
         height = std::max(leftHeight, rightHeight) + 1;
         if (rightSon != nullptr) {
             rightSon->father = this;
-            size += rightSon->size;
-            sum += rightSon->sum;
+//            size += rightSon->size;
+//            sum += rightSon->sum;
         }
         if (leftSon != nullptr) {
             leftSon->father = this;
-            size += leftSon->size;
-            sum += leftSon->sum;
-
+//            size += leftSon->size;
+//            sum += leftSon->sum;
         }
-
+        updateAllSonsAndAllFromSons();
         updateHeight();
         setMax();
     }
@@ -188,7 +187,7 @@ public:
         if (data == info) {
             return this;
         }
-        if (info > data) {
+        if (data < info) {
             if (rightSon != nullptr) {
                 return rightSon->internalFind(info);
             }
@@ -562,7 +561,7 @@ public:
         return leftSon->closestFromBelow(x);
     }
 
-    double findTopMMult(int m) const {
+    double findTopMMult(int m) {
         InnerRankTree<T> *current = this;
         while (current->sum > m && current->rightSon) {
             current = current->rightSon;
@@ -573,13 +572,12 @@ public:
             curr_sum = current->rightSon->peopleMultipliedByLevel;
             people_left_to_sum = m - current->rightSon->sum;
         }
-        if(people_left_to_sum<= current->sum){
-            curr_sum+= (current->level*current->sum);
+        if (people_left_to_sum <= current->sum) {
+            curr_sum += (current->level * current->sum);
             return curr_sum;
-        }
-        else{
-            curr_sum= curr_sum + (current->size*current->level) +
-                    current->leftSon.internal_findTopMMult(people_left_to_sum - current->sum);
+        } else {
+            curr_sum = curr_sum + (current->size * current->level) +
+                       current->leftSon->findTopMMult(people_left_to_sum - current->sum);
             return curr_sum;
         }
 
@@ -598,7 +596,8 @@ public:
             fromFather = father->totalSumUnder();
         return selfSum + leftSum() + fromFather;
     }
-    int getSum() const{
+
+    int getSum() const {
         return sum;
     }
 };
@@ -622,13 +621,13 @@ class RankTree {
         auto i2 = 0;
         while (i1 < v1.size() || i2 < v2.size()) {
             if (i1 != v1.size() && (i2 == v2.size() || *v1.at(i1) < *v2.at(i2))) {
-                T *pLevel = v1.at(i1);
-                res.push_back(*pLevel);
+                T *node = v1.at(i1);
+                res.push_back(*node);
                 i1++;
                 continue;
             }
-            T *pLevel = v2.at(i2);
-            res.push_back(*pLevel);
+            T *node = v2.at(i2);
+            res.push_back(*node);
             i2++;
         }
         return res;
@@ -748,18 +747,17 @@ public:
 
     void merge(RankTree<T> *other) {
         assert(tree != nullptr);
-        my_vector<T *> vec1 = tree->inOrder();
-        my_vector<T *> vec2 = other->tree->inOrder();
+        my_vector<T *> vec1 = inOrder();
+        my_vector<T *> vec2 = other->inOrder();
         my_vector<T> merged = merge(vec1, vec2);
         delete tree;
-        InnerRankTree<T> *tmp(&merged);
-        tree = tmp;
+        tree = new InnerRankTree<T>(merged);
     }
 
     int totalSumOver(const T &x) {
         if (tree == nullptr)
             return -1;
-        T &info = tree->closestFromAbove(info);
+        const T &info = tree->closestFromAbove(x);
         if (info < x)
             return 0;
         return (tree->internalFind(info))->totalSumOver();
@@ -768,15 +766,17 @@ public:
     int totalSumUnder(const T &x) {
         if (tree == nullptr)
             return -1;
-        T &info = tree->closestFromBelow(info);
+       const T &info = tree->closestFromBelow(x);
         if (info > x)
             return 0;
         return (tree->internalFind(info))->totalSumUnder();
     }
-    int getSum() const{
+
+    int getSum() const {
         return tree->getSum();
     }
-    double findTopMMult(int m) const{
+
+    double findTopMMult(int m) const {
         return tree->findTopMMult(m);
     }
 };

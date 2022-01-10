@@ -5,6 +5,7 @@
 #ifndef HW2_GROUPINFOBYSCORE_H
 #define HW2_GROUPINFOBYSCORE_H
 
+#include <ostream>
 #include "RankTree.h"
 
 class LevelNode {
@@ -21,6 +22,11 @@ public:
 
     int getLevel(){
         return level;
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const LevelNode &node) {
+        os << "level: " << node.level << " playersCounterInNode: " << node.playersCounterInNode;
+        return os;
     }
 
     LevelNode(const LevelNode &other) = default;
@@ -45,8 +51,8 @@ public:
         return level < other.level;
     }
 
-    bool operator==(const LevelNode &other) {
-        level == other.level;
+    bool operator==(const LevelNode &other) const{
+        return level == other.level;
     }
 };
 

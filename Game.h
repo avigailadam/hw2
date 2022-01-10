@@ -15,7 +15,6 @@ class Game {
     UnionFind* groups;
 public:
     Game(int k, int scale);
-
     void mergeGroups(int group1ID, int group2ID);
     void addPlayer(int playerID, int groupId, int score);
     void removePlayer(int playerID);
