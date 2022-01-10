@@ -37,10 +37,6 @@ public:
         return playersCounterInNode;
     }
 
-    int getLevel() {
-        return level;
-    }
-
     bool operator>(const LevelNode &other) {
         return level > other.level;
     }
@@ -92,6 +88,17 @@ public:
         LevelNode &node = levelTree->find(tmpNode);
         node.decreaseCounter();
     }
+    int getNumOfPlayersAtZero(){
+        return levelZeroCounter;
+    }
+    int getTreeSize(){
+        return levelTree->getSum();
+    }
+
+    double getTotSum(int m){
+        return levelTree->findTopMMult(m);
+    }
+
 };
 
 #endif //HW2_GROUPINFOBYSCORE_H

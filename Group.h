@@ -26,7 +26,7 @@ public:
             scores[0].increaseLevelZeroCounter();
         } else {
             scores[score].addPlayerWithLevel(level);
-            scores[score].addPlayerWithLevel(level);
+            scores[0].addPlayerWithLevel(level);
         }
         size++;
 
@@ -81,7 +81,13 @@ public:
         int sumOverLow = tree->totalSumOver(low);
         return sumOverLow - sumOverHigh;
     }
-
+    double getTopMAverage(int m){
+        if(scores->getTreeSize()>=m)
+            return (scores[0].getTotSum(m)/m);
+        else{
+            return (scores[0].getTotSum(scores->getTreeSize())/m);
+        }
+ }
 };
 
 

@@ -11,11 +11,11 @@
 #define BALANCE_TMP(direction) \
     assert(tmp != nullptr); \
     size = sizeFromSons(); \
-    tmp->size = size + tmp->direction####Size() + 1; \
+    tmp->size = size + tmp->direction##Size() + 1; \
     sum = rightSum() + leftSum() + selfSum; \
-    tmp->sum = sum + tmp->direction####Sum() + tmp->selfSum; \
+    tmp->sum = sum + tmp->direction##Sum() + tmp->selfSum; \
     peopleMultipliedByLevel = rightMultiplied() + leftMultiplied() + selfSum * level; \
-    tmp->peopleMultipliedByLevel = peopleMultipliedByLevel + tmp->direction####Multiplied() + tmp->selfSum * tmp->level
+    tmp->peopleMultipliedByLevel = peopleMultipliedByLevel + tmp->direction##Multiplied() + tmp->selfSum * tmp->level
 
 #include "exceptions.h"
 #include <cmath>
@@ -121,6 +121,7 @@ public:
         return data;
     }
 
+
     void updateHeight() {
         int leftHeight = leftSon == nullptr ? -1 : leftSon->height;
         int rightHeight = rightSon == nullptr ? -1 : rightSon->height;
@@ -197,7 +198,7 @@ public:
     }
 
 
-        int rightSize() {
+    int rightSize() {
         return RIGHT_OR_DEFAULT(size, 0);
     }
 
@@ -257,7 +258,7 @@ public:
             } else if (leftSon->balanceFactor() == -1) {
                 leftSon = leftSon->leftRotate();
                 InnerRankTree<T> *tmp = rightRotate();
-                tmp -> updateAllSonsAndAllFromSons();
+                tmp->updateAllSonsAndAllFromSons();
                 return tmp;
             }
         }
@@ -269,7 +270,7 @@ public:
             } else if (rightSon->balanceFactor() == 1) {
                 rightSon = rightSon->rightRotate();
                 InnerRankTree<T> *tmp = leftRotate();
-                tmp -> updateAllSonsAndAllFromSons();
+                tmp->updateAllSonsAndAllFromSons();
                 return tmp;
             }
         }
@@ -561,6 +562,29 @@ public:
         return leftSon->closestFromBelow(x);
     }
 
+    double findTopMMult(int m) const {
+        InnerRankTree<T> *current = this;
+        while (current->sum > m && current->rightSon) {
+            current = current->rightSon;
+        }
+        double curr_sum = 0;
+        int people_left_to_sum = m;
+        if (current->rightSon) {
+            curr_sum = current->rightSon->peopleMultipliedByLevel;
+            people_left_to_sum = m - current->rightSon->sum;
+        }
+        if(people_left_to_sum<= current->sum){
+            curr_sum+= (current->level*current->sum);
+            return curr_sum;
+        }
+        else{
+            curr_sum= curr_sum + (current->size*current->level) +
+                    current->leftSon.internal_findTopMMult(people_left_to_sum - current->sum);
+            return curr_sum;
+        }
+
+    }
+
     int totalSumOver() {
         int fromFather = 0;
         if (father != nullptr && father->data > data)
@@ -573,6 +597,9 @@ public:
         if (father != nullptr && father->data < data)
             fromFather = father->totalSumUnder();
         return selfSum + leftSum() + fromFather;
+    }
+    int getSum() const{
+        return sum;
     }
 };
 
@@ -744,6 +771,12 @@ public:
         if (info > x)
             return 0;
         return (tree->internalFind(info))->totalSumUnder();
+    }
+    int getSum() const{
+        return tree->getSum();
+    }
+    double findTopMMult(int m) const{
+        return tree->findTopMMult(m);
     }
 };
 

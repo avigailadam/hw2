@@ -24,7 +24,7 @@ void Game::addPlayer(int playerID, int groupId, int score) {
 void Game::mergeGroups(int group1ID, int group2ID) {
     if (group1ID <= 0 || group1ID > k || group2ID <= 0 || group2ID > k)
         throw InvalidInput();
-    groups->Union(group1ID,group2ID);
+    groups->Union(group1ID, group2ID);
 }
 
 void Game::removePlayer(int playerID) {
@@ -79,9 +79,11 @@ double Game::getPercentOfPlayersWithScoreInBounds(int groupID, int score, int lo
 
 
 double Game::averageHighestPlayerLevelByGroup(int groupID, int m) {
-    if (groupID > k || groupID < 0|| m<=0)
+    if (groupID > k || groupID < 0 || m <= 0)
         throw InvalidInput();
-
-    if(m>= group->getSize())
+    Group *group = groupID == 0 ? groups->getGroup(0) : groups->getGroup(groupID);
+    if (m >= group->getSize())
         throw OutOfRange();
+    return group->getTopMAverage(m);
+
 }
