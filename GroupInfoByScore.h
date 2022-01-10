@@ -12,15 +12,17 @@ class LevelNode {
     int level;
     int playersCounterInNode;
 public:
+    LevelNode() : level(-1), playersCounterInNode(-1) {}
+
     LevelNode(int level) : level(level), playersCounterInNode(1) {
         assert(level != 0);
     }
 
-    int getSum() {
+    int getSum() const {
         return playersCounterInNode;
     }
 
-    int getLevel(){
+    int getLevel() const {
         return level;
     }
 
@@ -39,19 +41,19 @@ public:
         playersCounterInNode--;
     }
 
-    int getCounter() {
+    int getCounter() const {
         return playersCounterInNode;
     }
 
-    bool operator>(const LevelNode &other) {
+    bool operator>(const LevelNode &other) const {
         return level > other.level;
     }
 
-    bool operator<(const LevelNode &other) {
+    bool operator<(const LevelNode &other) const {
         return level < other.level;
     }
 
-    bool operator==(const LevelNode &other) const{
+    bool operator==(const LevelNode &other) const {
         return level == other.level;
     }
 };
@@ -85,23 +87,31 @@ public:
 
     void addPlayerWithLevel(int level) {
         LevelNode tmpNode(level);
-        LevelNode &node = levelTree->find(tmpNode);
-        node.increaseCounter();
+        LevelNode &node = tmpNode;
+        if (!levelTree->contains(tmpNode)) {
+            levelTree->insert(tmpNode);
+            return;
+        }
+        levelTree->find(tmpNode).increaseCounter();
     }
 
     void removePlayerWithLevel(int level) {
         LevelNode tmpNode(level);
         LevelNode &node = levelTree->find(tmpNode);
         node.decreaseCounter();
+        if(node.getSum() == 0)
+            levelTree->remove(node);
     }
-    int getNumOfPlayersAtZero(){
+
+    int getNumOfPlayersAtZero() {
         return levelZeroCounter;
     }
-    int getTreeSize(){
+
+    int getTreeSize() {
         return levelTree->getSum();
     }
 
-    double getTotSum(int m){
+    double getTotSum(int m) {
         return levelTree->findTopMMult(m);
     }
 

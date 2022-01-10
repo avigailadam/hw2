@@ -45,8 +45,8 @@ StatusType GetPercentOfPlayersWithScoreInBounds(void *DS, int GroupID, int score
 
 StatusType AverageHighestPlayerLevelByGroup(void *DS, int GroupID, int m, double * level);
 
-StatusType GetPlayersBound(void *DS, int GroupID, int score, int m,
-                                         int * LowerBoundPlayers, int * HigherBoundPlayers);
+//StatusType GetPlayersBound(void *DS, int GroupID, int score, int m,
+//                                         int * LowerBoundPlayers, int * HigherBoundPlayers);
 
 void Quit(void** DS);
 

@@ -25,9 +25,7 @@ class UnionFind {
     }
 
     int internal_find(int i) {
-        if (parent[i] == EMPTY)
-            return i;
-        internal_find(parent[i]);
+        return parent[i] == EMPTY ? i : internal_find(parent[i]);
     }
 public:
 

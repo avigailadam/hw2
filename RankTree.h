@@ -277,7 +277,7 @@ public:
     }
 
     InnerRankTree<T> *insert(T x) {
-        assert(x != data);
+        assert(!(x == data));
         size++;
         sum += x.getSum();
         peopleMultipliedByLevel += x.getSum() * x.getLevel();
@@ -305,6 +305,10 @@ public:
         if (result == nullptr)
             throw NotExist();
         return result->data;
+    }
+
+    bool contains(const T &info) {
+        return internalFind(info) != nullptr;
     }
 
     my_vector<T *> inOrder() {
@@ -525,7 +529,7 @@ public:
         return internalFind(x) != nullptr;
     }
 
-    T &closestFromAbove(T &x) {
+    const T &closestFromAbove(const T &x) {
         if (data == x)
             return x;
         if (data > x) {
@@ -566,19 +570,20 @@ public:
         while (current->sum > m && current->rightSon) {
             current = current->rightSon;
         }
-        double curr_sum = 0;
-        int people_left_to_sum = m;
+        double currSum = 0;
+        int peopleLeftToSum = m;
         if (current->rightSon) {
-            curr_sum = current->rightSon->peopleMultipliedByLevel;
-            people_left_to_sum = m - current->rightSon->sum;
+            currSum = current->rightSon->peopleMultipliedByLevel;
+            peopleLeftToSum = m - current->rightSon->sum;
         }
-        if (people_left_to_sum <= current->sum) {
-            curr_sum += (current->level * current->sum);
-            return curr_sum;
+        if (peopleLeftToSum <= current->selfSum) {
+            currSum += (current->level * peopleLeftToSum);
+            return currSum;
         } else {
-            curr_sum = curr_sum + (current->size * current->level) +
-                       current->leftSon->findTopMMult(people_left_to_sum - current->sum);
-            return curr_sum;
+            assert(leftSon != nullptr);
+            currSum = currSum + (current->selfSum * current->level) +
+                      current->leftSon->findTopMMult(peopleLeftToSum - current->selfSum);
+            return currSum;
         }
 
     }
@@ -673,6 +678,12 @@ public:
         return tree->find(info);
     }
 
+    bool contains(const T &info) {
+        if (tree == nullptr)
+            return false;
+        return tree->contains(info);
+    }
+
     my_vector<T *> inOrder() {
         if (tree == nullptr)
             return my_vector<T *>();
@@ -746,7 +757,13 @@ public:
     }
 
     void merge(RankTree<T> *other) {
-        assert(tree != nullptr);
+        assert(other != nullptr);
+        if (tree == nullptr) {
+            tree = other->tree;
+            return;
+        }
+        if (other->tree == nullptr)
+            return;
         my_vector<T *> vec1 = inOrder();
         my_vector<T *> vec2 = other->inOrder();
         my_vector<T> merged = merge(vec1, vec2);
@@ -766,7 +783,7 @@ public:
     int totalSumUnder(const T &x) {
         if (tree == nullptr)
             return -1;
-       const T &info = tree->closestFromBelow(x);
+        const T &info = tree->closestFromBelow(x);
         if (info > x)
             return 0;
         return (tree->internalFind(info))->totalSumUnder();
@@ -777,7 +794,7 @@ public:
     }
 
     double findTopMMult(int m) const {
-        return tree->findTopMMult(m);
+        return tree == nullptr ? 0.0 : tree->findTopMMult(m);
     }
 };
 

@@ -47,6 +47,7 @@ void Game::increasePlayerLevel(int playerID, int levelIncrease) {
     Group *all = groups->getGroup(0);
     all->removePlayer(player.getLevel(), player.getScore());
     all->insertPlayer(levelIncrease + player.getLevel(), player.getScore());
+    player.addToLevel(levelIncrease);
 }
 
 void Game::changePlayerScore(int playerID, int newScore) {
@@ -74,7 +75,7 @@ double Game::getPercentOfPlayersWithScoreInBounds(int groupID, int score, int lo
     Group *group = groups->getGroup(groupID);
     int inScore = group->playersCountBetweenInScore(lowerLevel, higherLevel, score);
     int inGeneral = group->playersCountBetween(lowerLevel, higherLevel);
-    return ((double(inScore)) / inGeneral) * 100;
+    return inGeneral == 0? 0:((double(inScore)) / inGeneral) * 100;
 }
 
 

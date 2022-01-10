@@ -77,10 +77,14 @@ public:
         LevelNode high(highLevel);
         LevelNode low(lowLevel);
         RankTree<LevelNode>* tree = info.getLevelTree();
+        if(tree->isEmpty())
+            return lowLevel <= 0 ? info.getLevelZeroCounter() : 0;
         int sumOverHigh = tree->totalSumOver(high);
         int sumOverLow = tree->totalSumOver(low);
         return sumOverLow - sumOverHigh;
     }
+
+
     double getTopMAverage(int m){
         if(scores->getTreeSize()>=m)
             return (scores[0].getTotSum(m)/m);

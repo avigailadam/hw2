@@ -135,7 +135,7 @@ static errorType OnIncreasePlayerIDLevel(void* DS, const char* const command);
 static errorType OnChangePlayerIDScore(void* DS, const char* const command);
 static errorType OnGetPercentOfPlayersWithScoreInBounds(void* DS, const char* const command);
 static errorType OnAverageHighestPlayerLevelByGroup(void* DS, const char* const command);
-static errorType OnGetPlayersBound(void* DS, const char* const command);
+//static errorType OnGetPlayersBound(void* DS, const char* const command);
 static errorType OnQuit(void** DS, const char* const command);
 
 /***************************************************************************/
@@ -175,9 +175,9 @@ static errorType parser(const char* const command) {
         case (AVERAGEHIGHESTPLAYERLEVELBYGROUP_CMD):
             rtn_val = OnAverageHighestPlayerLevelByGroup(DS, command_args);
             break;
-        case (GETPLAYERSBOUND_CMD):
-            rtn_val = OnGetPlayersBound(DS, command_args);
-            break;
+//        case (GETPLAYERSBOUND_CMD):
+//            rtn_val = OnGetPlayersBound(DS, command_args);
+//            break;
         case (QUIT_CMD):
             rtn_val = OnQuit(&DS, command_args);
             break;
@@ -359,25 +359,25 @@ static errorType OnAverageHighestPlayerLevelByGroup(void* DS, const char* const 
 /* OnGetPlayersBound                                                        */
 /***************************************************************************/
 
-static errorType OnGetPlayersBound(void* DS, const char* const command) {
-    int groupID;
-    int score;
-    int m;
-    ValidateRead(sscanf(command, "%d %d %d", &groupID, &score, &m), 3,
-                 "GetPlayersBound failed.\n");
-    int lowerBoundPlayers = 0;
-    int higherBoundPlayers = 0;
-    StatusType res = GetPlayersBound(DS, groupID, score, m, &lowerBoundPlayers, &higherBoundPlayers);
-
-    if (res != SUCCESS) {
-        printf("GetPlayersBound: %s\n", ReturnValToStr(res));
-        return error_free;
-    }
-
-    printf("GetPlayersBound: %d %d\n", lowerBoundPlayers, higherBoundPlayers);
-
-    return error_free;
-}
+//static errorType OnGetPlayersBound(void* DS, const char* const command) {
+//    int groupID;
+//    int score;
+//    int m;
+//    ValidateRead(sscanf(command, "%d %d %d", &groupID, &score, &m), 3,
+//                 "GetPlayersBound failed.\n");
+//    int lowerBoundPlayers = 0;
+//    int higherBoundPlayers = 0;
+//    StatusType res = GetPlayersBound(DS, groupID, score, m, &lowerBoundPlayers, &higherBoundPlayers);
+//
+//    if (res != SUCCESS) {
+//        printf("GetPlayersBound: %s\n", ReturnValToStr(res));
+//        return error_free;
+//    }
+//
+//    printf("GetPlayersBound: %d %d\n", lowerBoundPlayers, higherBoundPlayers);
+//
+//    return error_free;
+//}
 
 /***************************************************************************/
 /* OnQuit                                                                  */
