@@ -30,21 +30,21 @@ class UnionFind {
 public:
 
     UnionFind(int k, int scale) : numOfGroups(k + 1) {
-        groups = new Group *[k];
-        parent = new int[k];
+        groups = new Group *[numOfGroups];
+        parent = new int[numOfGroups];
         if (!groups || !parent) {
             delete[] groups;
             delete[] parent;
             throw std::bad_alloc();
         }
-        for (int i = 0; i < k; ++i) {
+        for (int i = 0; i <= numOfGroups; ++i) {
             parent[i] = EMPTY;
             groups[i] = new Group(scale);
         }
     }
 
     ~UnionFind() {
-        for (int i = 0; i < numOfGroups; ++i) {
+        for (int i = 0; i <= numOfGroups; ++i) {
             delete groups[i];
         }
         delete[] groups;
@@ -78,7 +78,7 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &os, const UnionFind &current) {
-        for (int i = 0; i < current.numOfGroups; ++i) {
+        for (int i = 0; i <= current.numOfGroups; ++i) {
             os << i << " is son of " << current.parent[i] << " his size is: " << current.groups[i]->getSize()
                << std::endl;
         }

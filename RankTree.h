@@ -571,9 +571,9 @@ public:
 
     double findTopMMult(int m) {
         InnerRankTree<T> *current = this;
-        assert((current->sum>=m));
+        assert((current->sum >= m));
         int peopleLeftToSum = m;
-        if(current->sum==m) {
+        if (current->sum == m) {
             return current->peopleMultipliedByLevel;
         }
         while (current->rightSon && current->rightSon->sum > m) {
@@ -636,6 +636,14 @@ class RankTree {
             if (i1 != v1.size() && (i2 == v2.size() || *v1.at(i1) < *v2.at(i2))) {
                 T *node = v1.at(i1);
                 res.push_back(*node);
+                i1++;
+                continue;
+            }
+            if (*v1.at(i1) == *v2.at(i2)) {
+                T *node1 = v1.at(i1);
+                T *node2 = v2.at(i2);
+                res.push_back(*node1 + *node2);
+                i2++;
                 i1++;
                 continue;
             }

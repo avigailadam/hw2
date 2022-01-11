@@ -17,11 +17,18 @@ public:
     LevelNode(int level) : level(level), playersCounterInNode(1) {
         assert(level != 0);
     }
+
     LevelNode(int level, int numOfPlayers) : level(level), playersCounterInNode(numOfPlayers) {
         assert(level != 0);
     }
+
     int getSelfSum() const {
         return playersCounterInNode;
+    }
+
+    LevelNode &operator+(const LevelNode &other) {
+        playersCounterInNode += other.playersCounterInNode;
+        return *this;
     }
 
     int getLevel() const {
@@ -93,8 +100,8 @@ public:
             levelTree->insert(tmpNode);
             return;
         }
-        LevelNode& node =levelTree->find(tmpNode);
-        LevelNode newNode =LevelNode(level, node.getSelfSum() + 1);
+        LevelNode &node = levelTree->find(tmpNode);
+        LevelNode newNode = LevelNode(level, node.getSelfSum() + 1);
         levelTree->remove(node);
         levelTree->insert(newNode);
     }
@@ -103,12 +110,11 @@ public:
         LevelNode tmpNode(level);
         LevelNode &node = levelTree->find(tmpNode);
         node.decreaseCounter();
-        if (node.getSelfSum() == 0){
+        if (node.getSelfSum() == 0) {
             levelTree->remove(node);
-        return;
-    }
-        else{
-            LevelNode newNode =LevelNode(level, node.getSelfSum());
+            return;
+        } else {
+            LevelNode newNode = LevelNode(level, node.getSelfSum());
             levelTree->remove(node);
             levelTree->insert(newNode);
         }
