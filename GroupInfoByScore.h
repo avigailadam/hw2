@@ -87,7 +87,6 @@ public:
 
     void addPlayerWithLevel(int level) {
         LevelNode tmpNode(level);
-        LevelNode &node = tmpNode;
         if (!levelTree->contains(tmpNode)) {
             levelTree->insert(tmpNode);
             return;

@@ -25,8 +25,8 @@ class LinkedList {
 
         ~Node() = default;
     };
-    Node *head;
     int size;
+    Node *head;
 public:
     class const_iterator;
 

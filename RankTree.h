@@ -486,11 +486,11 @@ public:
         validateFathers();
         if (leftSon != nullptr) {
             leftSon->validatePointers();
-            leftSon->father == this;
+            assert(leftSon->father == this);
         }
         if (rightSon != nullptr) {
             rightSon->validatePointers();
-            rightSon->father == this;
+            assert(rightSon->father == this);
         }
     }
 
@@ -615,7 +615,7 @@ class RankTree {
 #ifndef DEBUG
         if (tree) {
             tree->validate();
-            tree->getFather() == nullptr;
+            assert(tree->getFather() == nullptr);
         }
 #endif
     }
