@@ -17,8 +17,10 @@ public:
     LevelNode(int level) : level(level), playersCounterInNode(1) {
         assert(level != 0);
     }
-
-    int getSum() const {
+    LevelNode(int level, int numOfPlayers) : level(level), playersCounterInNode(numOfPlayers) {
+        assert(level != 0);
+    }
+    int getSelfSum() const {
         return playersCounterInNode;
     }
 
@@ -91,15 +93,25 @@ public:
             levelTree->insert(tmpNode);
             return;
         }
-        levelTree->find(tmpNode).increaseCounter();
+        LevelNode& node =levelTree->find(tmpNode);
+        LevelNode newNode =LevelNode(level, node.getSelfSum() + 1);
+        levelTree->remove(node);
+        levelTree->insert(newNode);
     }
 
     void removePlayerWithLevel(int level) {
         LevelNode tmpNode(level);
         LevelNode &node = levelTree->find(tmpNode);
         node.decreaseCounter();
-        if(node.getSum() == 0)
+        if (node.getSelfSum() == 0){
             levelTree->remove(node);
+        return;
+    }
+        else{
+            LevelNode newNode =LevelNode(level, node.getSelfSum());
+            levelTree->remove(node);
+            levelTree->insert(newNode);
+        }
     }
 
     int getNumOfPlayersAtZero() {
@@ -107,7 +119,7 @@ public:
     }
 
     int getTreeSize() {
-        return levelTree->getSum();
+        return levelTree->isEmpty() ? 0 : levelTree->getSum();
     }
 
     double getTotSum(int m) {

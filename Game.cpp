@@ -83,7 +83,7 @@ double Game::averageHighestPlayerLevelByGroup(int groupID, int m) {
     if (groupID > k || groupID < 0 || m <= 0)
         throw InvalidInput();
     Group *group = groupID == 0 ? groups->getGroup(0) : groups->getGroup(groupID);
-    if (m >= group->getSize())
+    if (m > group->getSize())
         throw OutOfRange();
     return group->getTopMAverage(m);
 

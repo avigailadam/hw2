@@ -63,8 +63,8 @@ public:
         max = this;
         height = 0;
         size = 1;
-        sum = x.getSum();
-        selfSum = x.getSum();
+        sum = x.getSelfSum();
+        selfSum = x.getSelfSum();
         level = x.getLevel();
         peopleMultipliedByLevel = selfSum * level;
     }
@@ -125,6 +125,10 @@ public:
         int leftHeight = leftSon == nullptr ? -1 : leftSon->height;
         int rightHeight = rightSon == nullptr ? -1 : rightSon->height;
         height = std::max(leftHeight, rightHeight) + 1;
+    }
+
+    int getPeopleMultipliedByLevel() const {
+        return peopleMultipliedByLevel;
     }
 
 private:
@@ -279,8 +283,8 @@ public:
     InnerRankTree<T> *insert(T x) {
         assert(!(x == data));
         size++;
-        sum += x.getSum();
-        peopleMultipliedByLevel += x.getSum() * x.getLevel();
+        sum += x.getSelfSum();
+        peopleMultipliedByLevel += x.getSelfSum() * x.getLevel();
         if (x > data) {
             if (rightSon == nullptr) {
                 rightSon = new InnerRankTree<T>(x);
@@ -535,7 +539,7 @@ public:
         if (data > x) {
             if (leftSon == nullptr || leftSon->data < x)
                 return data;
-            assert(leftSon->data > x);
+            assert(leftSon->data > x || leftSon->data == x);
             return leftSon->closestFromAbove(x);
         }
         assert(data < x);
@@ -567,11 +571,15 @@ public:
 
     double findTopMMult(int m) {
         InnerRankTree<T> *current = this;
-        while (current->sum > m && current->rightSon) {
+        assert((current->sum>=m));
+        int peopleLeftToSum = m;
+        if(current->sum==m) {
+            return current->peopleMultipliedByLevel;
+        }
+        while (current->rightSon && current->rightSon->sum > m) {
             current = current->rightSon;
         }
         double currSum = 0;
-        int peopleLeftToSum = m;
         if (current->rightSon) {
             currSum = current->rightSon->peopleMultipliedByLevel;
             peopleLeftToSum = m - current->rightSon->sum;
@@ -791,6 +799,10 @@ public:
 
     int getSum() const {
         return tree->getSum();
+    }
+
+    int getPeopleMultipliedByLevel() const {
+        return tree->getPeopleMultipliedByLevel();
     }
 
     double findTopMMult(int m) const {

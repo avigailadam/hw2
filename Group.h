@@ -74,24 +74,28 @@ public:
     int playersCountBetweenInScore(int lowLevel, int highLevel, int score) {
         assert(score != 0);
         GroupInfoByScore info = scores[score];
-        LevelNode high(highLevel);
-        LevelNode low(lowLevel);
-        RankTree<LevelNode>* tree = info.getLevelTree();
-        if(tree->isEmpty())
+        RankTree<LevelNode> *tree = info.getLevelTree();
+        if (tree->isEmpty() || highLevel == 0) {
             return lowLevel <= 0 ? info.getLevelZeroCounter() : 0;
+        }
+        LevelNode high(highLevel);
         int sumOverHigh = tree->totalSumOver(high);
-        int sumOverLow = tree->totalSumOver(low);
+        int tmpLow = lowLevel == 0 ? 1 : lowLevel;
+        LevelNode low(tmpLow);
+        int sumOverLow = tree->totalSumOver(tmpLow);
+        if (lowLevel == 0)
+            sumOverLow += info.getLevelZeroCounter();
         return sumOverLow - sumOverHigh;
     }
 
 
-    double getTopMAverage(int m){
-        if(scores->getTreeSize()>=m)
-            return (scores[0].getTotSum(m)/m);
-        else{
-            return (scores[0].getTotSum(scores->getTreeSize())/m);
-        }
- }
+    double getTopMAverage(int m) {
+        if (scores[0].getTreeSize() >= m)
+            return (scores[0].getTotSum(m) / m);
+        else
+            return scores[0].getLevelTree()->isEmpty() ? 0.0 :
+                   double(scores[0].getLevelTree()->getPeopleMultipliedByLevel()) / m;
+    }
 };
 
 
