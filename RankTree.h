@@ -8,6 +8,7 @@
 
 #define ASSERT_SON(son, method) if((son) != nullptr) son->method()
 #define ASSERT_EQUALS(a, b) if ((a) != (b)) do { std::cout << "tree:" << std::endl; debugTree(0); std::cout << (#a) << ": " << (a) << std::endl << " != " << std::endl << (#b) << ": " <<(b) << std::endl; assert(0); } while(0)
+#define ASSERT_EQUALS2(a, b) if ((a) != (b)) do { std::cout << "tree:" << std::endl; tree->debugTree(0); std::cout << (#a) << ": " << (a) << std::endl << " != " << std::endl << (#b) << ": " <<(b) << std::endl; assert(0); } while(0)
 #define BALANCE_TMP(direction) \
     assert(tmp != nullptr); \
     size = sizeFromSons(); \
@@ -27,7 +28,7 @@ using std::cout;
 using std::endl;
 
 template<class T>
-my_vector<T> sliceVec(my_vector<T> &vector, int start, int end) {
+my_vector<T> sliceVec(const my_vector<T> &vector, int start, int end) {
     return vector.slice(start, end);
 }
 
@@ -81,27 +82,30 @@ public:
 
 //todo: update size needed in vec const'
 //todo: update self sum and peopleMultipliedByLevel
-    explicit InnerRankTree(my_vector<T> &vector) : data(vector.at(vector.size() / 2)), height(0), father(nullptr) {
+    explicit InnerRankTree(const my_vector<T> &vector) :
+            data(vector.copyAt(vector.size() / 2)),
+            height(0),
+            father(nullptr),
+            rightSon(nullptr),
+            leftSon(nullptr) {
+        sum = data.getSelfSum();
+        selfSum = sum;
+        level = data.getLevel();
+        peopleMultipliedByLevel = level * selfSum;
         int size = vector.size();
         my_vector<T> rightVec = sliceVec(vector, (size / 2) + 1, size - 1);
         rightSon = rightVec.empty() ? nullptr : new InnerRankTree<T>(rightVec);
-        int rightHeight = rightSon == nullptr ? -1 : rightSon->height;
         my_vector<T> leftVec = sliceVec(vector, 0, (size / 2) - 1);
-        leftSon = leftVec.empty() ? nullptr : new InnerRankTree<T>(leftVec);
-        int leftHeight = leftSon == nullptr ? -1 : leftSon->height;
-        height = std::max(leftHeight, rightHeight) + 1;
-        if (rightSon != nullptr) {
+        if (leftVec.empty()) {
+            leftSon = nullptr;
+        } else {
+            leftSon = new InnerRankTree<T>(leftVec);
+        }
+        if (rightSon != nullptr)
             rightSon->father = this;
-//            size += rightSon->size;
-//            sum += rightSon->sum;
-        }
-        if (leftSon != nullptr) {
+        if (leftSon != nullptr)
             leftSon->father = this;
-//            size += leftSon->size;
-//            sum += leftSon->sum;
-        }
         updateAllSonsAndAllFromSons();
-        updateHeight();
         setMax();
     }
 
@@ -240,6 +244,7 @@ public:
     void updateAllFromSons() {
         size = sizeFromSons();
         sum = sumFromSons();
+        updateHeight();
         peopleMultipliedByLevel = multipliedFromSons();
     }
 
@@ -328,6 +333,7 @@ public:
         size = 1 + leftSize() + rightSize();
 
         sum = selfSum + leftSum() + rightSum();
+        assert(sum > 0);
         if (father != nullptr)
             father->updateSizeAndSum();
         peopleMultipliedByLevel = leftMultiplied() +
@@ -456,6 +462,8 @@ public:
     void validateSum() {
         ASSERT_SON(leftSon, validateSum);
         ASSERT_SON(rightSon, validateSum);
+        assert(selfSum > 0);
+        assert(sum > 0);
         ASSERT_EQUALS(leftSum() + rightSum() + selfSum, sum);
     }
 
@@ -537,17 +545,15 @@ public:
         if (data == x)
             return x;
         if (data > x) {
-            if (leftSon == nullptr || leftSon->data < x)
+            if (leftSon == nullptr)
                 return data;
-            assert(leftSon->data > x || leftSon->data == x);
-            return leftSon->closestFromAbove(x);
+            const T &tmp = leftSon->closestFromAbove(x);
+            return (tmp > x || tmp == x) ? tmp : data;
         }
         assert(data < x);
         if (rightSon == nullptr)
             return data;
         assert(rightSon != nullptr);
-        if (rightSon->data > x)
-            return rightSon->data;
         return rightSon->closestFromAbove(x);
     }
 
@@ -571,35 +577,55 @@ public:
 
     double findTopMMult(int m) {
         InnerRankTree<T> *current = this;
-        assert((current->sum >= m));
+        assert(current->sum >= m);
         int peopleLeftToSum = m;
-        if (current->sum == m) {
+        if (current->sum == m)
             return current->peopleMultipliedByLevel;
-        }
-        while (current->rightSon && current->rightSon->sum > m) {
+        while (current->rightSon && current->rightSon->sum > m)
             current = current->rightSon;
-        }
         double currSum = 0;
         if (current->rightSon) {
             currSum = current->rightSon->peopleMultipliedByLevel;
             peopleLeftToSum = m - current->rightSon->sum;
         }
-        if (peopleLeftToSum <= current->selfSum) {
-            currSum += (current->level * peopleLeftToSum);
-            return currSum;
-        } else {
-            assert(leftSon != nullptr);
-            currSum = currSum + (current->selfSum * current->level) +
-                      current->leftSon->findTopMMult(peopleLeftToSum - current->selfSum);
-            return currSum;
-        }
+        if (peopleLeftToSum <= current->selfSum)
+            return currSum + (current->level * peopleLeftToSum);
+        assert(leftSon != nullptr);
+        return currSum + (current->selfSum * current->level) +
+               current->leftSon->findTopMMult(peopleLeftToSum - current->selfSum);
+    }
 
+    double realTopM(int m) {
+        my_vector<T *> arr = inOrder();
+        int peopleCounter = 0;
+        double res = 0;
+        for (int i = arr.size() - 1; i >= 0; --i) {
+            if (peopleCounter == m)
+                break;
+            int peopleAtLevel = arr.at(i)->getSelfSum();
+            int level = arr.at(i)->getLevel();
+            if (peopleAtLevel <= m - peopleCounter) {
+                res += peopleAtLevel * level;
+                peopleCounter += peopleAtLevel;
+                continue;
+            }
+            assert(peopleAtLevel > m - peopleCounter);
+            res += (m - peopleCounter) * level;
+            break;
+        }
+        return res;
     }
 
     int totalSumOver() {
         int fromFather = 0;
-        if (father != nullptr && father->data > data)
-            fromFather = father->totalSumOver();
+        auto currentFather = father;
+        while (currentFather != nullptr) {
+            if (currentFather->data > data) {
+                fromFather = currentFather->totalSumOver();
+                break;
+            }
+            currentFather = currentFather->father;
+        }
         return selfSum + rightSum() + fromFather;
     }
 
@@ -619,27 +645,21 @@ template<class T>
 class RankTree {
     InnerRankTree<T> *tree;
 
-    void validate() {
-#ifndef DEBUG
-        if (tree) {
-            tree->validate();
-            assert(tree->getFather() == nullptr);
-        }
-#endif
-    }
 
-    my_vector<T> merge(my_vector<T *> v1, my_vector<T *> v2) {
+    my_vector<T> mergeVec(my_vector<T *> v1, my_vector<T *> v2) {
         my_vector<T> res(v1.size() + v2.size());
         auto i1 = 0;
         auto i2 = 0;
         while (i1 < v1.size() || i2 < v2.size()) {
-            if (i1 != v1.size() && (i2 == v2.size() || *v1.at(i1) < *v2.at(i2))) {
+            assert(i1 <= v1.size());
+            assert(i2 <= v2.size());
+            if (i1 < v1.size() && (i2 == v2.size() || *v1.at(i1) < *v2.at(i2))) {
                 T *node = v1.at(i1);
                 res.push_back(*node);
                 i1++;
                 continue;
             }
-            if (*v1.at(i1) == *v2.at(i2)) {
+            if (i1 != v1.size() && i2 != v2.size() && *v1.at(i1) == *v2.at(i2)) {
                 T *node1 = v1.at(i1);
                 T *node2 = v2.at(i2);
                 res.push_back(*node1 + *node2);
@@ -655,6 +675,16 @@ class RankTree {
     }
 
 public:
+
+    void validate() {
+#ifndef DEBUG
+        if (tree) {
+            tree->validate();
+            assert(tree->getFather() == nullptr);
+        }
+#endif
+    }
+
     RankTree() {
         tree = nullptr;
     }
@@ -765,6 +795,7 @@ public:
             cout << "null" << endl;
             return;
         }
+        cout << "non empty tree" << endl;
         tree->debugTree(0);
     }
 
@@ -774,22 +805,18 @@ public:
 
     void merge(RankTree<T> *other) {
         assert(other != nullptr);
-        if (tree == nullptr) {
-            tree = other->tree;
-            return;
-        }
         if (other->tree == nullptr)
             return;
-        my_vector<T *> vec1 = inOrder();
+        my_vector<T *> vec1 = tree == nullptr ? my_vector<T *>() : inOrder();
         my_vector<T *> vec2 = other->inOrder();
-        my_vector<T> merged = merge(vec1, vec2);
+        my_vector<T> merged = mergeVec(vec1, vec2);
         delete tree;
         tree = new InnerRankTree<T>(merged);
     }
 
     int totalSumOver(const T &x) {
         if (tree == nullptr)
-            return -1;
+            return 0;
         const T &info = tree->closestFromAbove(x);
         if (info < x)
             return 0;
@@ -806,16 +833,28 @@ public:
     }
 
     int getSum() const {
-        return tree->getSum();
+        return tree == nullptr ? 0 : tree->getSum();
     }
 
     int getPeopleMultipliedByLevel() const {
-        return tree->getPeopleMultipliedByLevel();
+        return tree == nullptr ? 0 : tree->getPeopleMultipliedByLevel();
+    }
+
+    double realTopM(int m) const {
+        return tree == nullptr ? 0.0 : tree->realTopM(m);
     }
 
     double findTopMMult(int m) const {
-        return tree == nullptr ? 0.0 : tree->findTopMMult(m);
+        double res = 0;
+        if (tree == nullptr)
+            res = 0.0;
+        else
+            res = tree->findTopMMult(m);
+        ASSERT_EQUALS2(res, realTopM(m));
+        return res;
     }
+
+
 };
 
 #endif

@@ -33,7 +33,7 @@ public:
         delete[] table;
     }
 
-    void insert(int playerID, int groupID, int score);
+    void insert(int playerID, int groupID, int score, int level = 0);
 
     void remove(int playerID);
 

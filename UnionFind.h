@@ -37,14 +37,14 @@ public:
             delete[] parent;
             throw std::bad_alloc();
         }
-        for (int i = 0; i <= numOfGroups; ++i) {
+        for (int i = 0; i < numOfGroups; ++i) {
             parent[i] = EMPTY;
             groups[i] = new Group(scale);
         }
     }
 
     ~UnionFind() {
-        for (int i = 0; i <= numOfGroups; ++i) {
+        for (int i = 0; i < numOfGroups; ++i) {
             delete groups[i];
         }
         delete[] groups;
@@ -60,16 +60,20 @@ public:
         if (groups[groupA]->getSize() < groups[groupB]->getSize()) {
             parent[groupA] = groupB;
             groups[groupB]->mergeGroups(groups[groupA]);
+            delete groups[groupA];
+            groups[groupA] = nullptr;
         } else {
             parent[groupB] = groupA;
             groups[groupA]->mergeGroups(groups[groupB]);
+            delete groups[groupB];
+            groups[groupB] = nullptr;
         }
-
     }
 
     int find(int i) {
         int father = internal_find(i);
         updateFather(i, father);
+        assert(groups[father] != nullptr);
         return father;
     }
 

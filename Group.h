@@ -11,7 +11,7 @@ class Group {
     int scale;
     int size;
     GroupInfoByScore *scores;
-//scores[0] is the group for all players in the group,not devided by score.
+//scores[0] is the groupInfo for all players in the group in all scores.
 public:
     Group(int scale) : scale(scale), size(0), scores(new GroupInfoByScore[scale + 1]) {
     }
@@ -21,6 +21,7 @@ public:
     }
 
     void insertPlayer(int level, int score) {
+        validate();
         if (level == 0) {
             scores[score].increaseLevelZeroCounter();
             scores[0].increaseLevelZeroCounter();
@@ -29,10 +30,13 @@ public:
             scores[0].addPlayerWithLevel(level);
         }
         size++;
-
+        validate();
     }
 
     void removePlayer(int level, int score) {
+        validate();
+        scores[score].validateLevelTree();
+        scores[0].validateLevelTree();
         if (level == 0) {
             scores[score].decreaseLevelZeroCounter();
             scores[0].decreaseLevelZeroCounter();
@@ -41,60 +45,50 @@ public:
             scores[0].removePlayerWithLevel(level);
         }
         size--;
+        validate();
     }
 
     void mergeGroups(Group *otherGroup) {
+        validate();
         for (int i = 0; i <= scale; ++i) {
-            (scores[i].getLevelTree())->merge((otherGroup->scores[i]).getLevelTree());
+            scores[i].merge(otherGroup->scores[i]);
             scores[i].addLevelZeroCounter(otherGroup->scores[i].getLevelZeroCounter());
         }
         size += otherGroup->size;
+        validate();
     }
 
     int getSize() const {
         return size;
     }
 
-    void increaseLevelZeroCounter() {
-        scores->increaseLevelZeroCounter();
-    }
-
-    void decreaseLevelZeroCounter() {
-        scores->decreaseLevelZeroCounter();
-    }
-
     int playersCountBetween(int lowLevel, int highLevel) {
-        int counter = 0;
-        for (int i = 1; i <= scale; ++i) {
-            counter += playersCountBetweenInScore(lowLevel, highLevel, i);
-        }
-        return counter;
+        return playersCountBetweenInScore(lowLevel, highLevel, 0);
     }
 
     int playersCountBetweenInScore(int lowLevel, int highLevel, int score) {
-        assert(score != 0);
-        GroupInfoByScore info = scores[score];
-        RankTree<LevelNode> *tree = info.getLevelTree();
-        if (tree->isEmpty() || highLevel == 0) {
-            return lowLevel <= 0 ? info.getLevelZeroCounter() : 0;
-        }
-        LevelNode high(highLevel);
-        int sumOverHigh = tree->totalSumOver(high);
-        int tmpLow = lowLevel == 0 ? 1 : lowLevel;
-        LevelNode low(tmpLow);
-        int sumOverLow = tree->totalSumOver(tmpLow);
-        if (lowLevel == 0)
-            sumOverLow += info.getLevelZeroCounter();
-        return sumOverLow - sumOverHigh;
+        return scores[score].countScoreBetween(lowLevel, highLevel);
     }
 
 
     double getTopMAverage(int m) {
-        if (scores[0].getTreeSize() >= m)
-            return (scores[0].getTotSum(m) / m);
-        else
-            return scores[0].getLevelTree()->isEmpty() ? 0.0 :
-                   double(scores[0].getLevelTree()->getPeopleMultipliedByLevel()) / m;
+        return scores[0].getTopM(m);
+    }
+
+    void validate() {
+        for (int i = 0; i <= scale; i++) {
+            scores[i].validateLevelTree();
+        }
+        int counter = 0;
+        int max = scores[0].getMaxLevel();
+        for (int i = 1; i <= scale; ++i) {
+            if (scores[i].getMaxLevel() > max)
+                assert(0);
+        }
+        for (int i = 1; i <= scale; ++i) {
+            counter += playersCountBetweenInScore(0, max, i);
+        }
+        assert(counter == playersCountBetween(0, max));
     }
 };
 

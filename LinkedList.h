@@ -17,8 +17,8 @@ class LinkedList {
         Node() = default;
 
     public:
-        explicit Node(int playerID, int groupID, int score, Node *node_next = nullptr) : player(playerID, groupID,
-                                                                                                score, 0),
+        explicit Node(int playerID, int groupID, int score,int level = 0, Node *node_next = nullptr) : player(playerID, groupID,
+                                                                                                score, level),
                                                                                          next(node_next) {};
 
         Node(Node &other) = default;
@@ -36,7 +36,9 @@ public:
 
     LinkedList &operator=(const LinkedList &other);
 
-    void insert(int playerID, int groupID, int score);
+    virtual ~LinkedList();
+
+    void insert(int playerID, int groupID, int score, int level = 0);
 
     void remove(int playerId);
 

@@ -16,6 +16,9 @@ class Game {
 public:
     Game(int k, int scale);
     void mergeGroups(int group1ID, int group2ID);
+
+    virtual ~Game();
+
     void addPlayer(int playerID, int groupId, int score);
     void removePlayer(int playerID);
     void increasePlayerLevel(int playerID, int levelIncrease);
@@ -23,6 +26,7 @@ public:
     double getPercentOfPlayersWithScoreInBounds(int groupID, int score, int lowerLevel, int higherLevel);
     double averageHighestPlayerLevelByGroup(int groupID, int m);
 
+    void validate();
 };
 
 

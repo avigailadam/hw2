@@ -72,8 +72,8 @@ LinkedList &LinkedList::operator=(const LinkedList &other) {
     return *this;
 }
 
-void LinkedList::insert(int playerId, int groupId, int score) {
-    Node *new_node = new Node(playerId, groupId, score);
+void LinkedList::insert(int playerId, int groupId, int score, int level) {
+    Node *new_node = new Node(playerId, groupId, score, level);
     if (head == nullptr) {
         head = new_node;
         size++;
@@ -100,4 +100,13 @@ std::ostream &operator<<(std::ostream &os, const LinkedList &list) {
     }
     os << std::endl;
     return os;
+}
+
+LinkedList::~LinkedList() {
+    Node* next = head;
+    while (next != nullptr) {
+        Node* temp = next->next;
+        delete next;
+        next = temp;
+    }
 }

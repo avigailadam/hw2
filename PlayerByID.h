@@ -17,12 +17,12 @@ public:
         return id;
     }
 
-    void setScore(int score) {
-        PlayerByID::score = score;
+    void setScore(int scoreToChange) {
+        score = scoreToChange;
     }
 
-    void addToLevel(int level) {
-        PlayerByID::level += level;
+    void addToLevel(int levelIncrease) {
+        level += levelIncrease;
     }
 
     int getGroupId() const {

@@ -34,7 +34,7 @@ public:
         }
     }
 
-    explicit my_vector(int maxSize) : array(new T[maxSize]),max_size(maxSize) , current_size(0), is_slice(false){
+    explicit my_vector(int maxSize) : array(new T[maxSize]), max_size(maxSize), current_size(0), is_slice(false) {
 
     }
 
@@ -59,23 +59,30 @@ public:
         array[current_size++] = t;
     }
 
-    my_vector<T> slice(int begin, int end) {
+    my_vector<T> slice(int begin, int end) const {
         if (begin > end)
             return my_vector<T>();
         my_vector<T> result(end - begin + 1);
-        for (int i = begin; i <= end; ++i) {
+        for (int i = begin; i <= end; ++i)
             result.push_back(at(i));
-        }
         return result;
     }
 
 
     T &at(int i) {
+        assert(i >= 0);
+        assert(i < current_size);
         return array[i];
     }
 
     const T &at(int i) const {
+        assert(i >= 0);
+        assert(i < current_size);
         return array[i];
+    }
+
+    T copyAt(int i) const {
+        return at(i);
     }
 
     bool is_sorted_ptr() const {

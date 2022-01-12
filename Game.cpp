@@ -22,12 +22,15 @@ void Game::addPlayer(int playerID, int groupId, int score) {
 }
 
 void Game::mergeGroups(int group1ID, int group2ID) {
+    validate();
     if (group1ID <= 0 || group1ID > k || group2ID <= 0 || group2ID > k)
         throw InvalidInput();
     groups->Union(group1ID, group2ID);
+    validate();
 }
 
 void Game::removePlayer(int playerID) {
+    validate();
     if (playerID <= 0)
         throw InvalidInput();
     PlayerByID player = players->getPlayer(playerID);
@@ -35,56 +38,87 @@ void Game::removePlayer(int playerID) {
     group->removePlayer(player.getLevel(), player.getScore());
     Group *all = groups->getGroup(0);
     all->removePlayer(player.getLevel(), player.getScore());
+    players->remove(playerID);
+    validate();
 }
 
 void Game::increasePlayerLevel(int playerID, int levelIncrease) {
+    validate();
     if (playerID <= 0 || levelIncrease <= 0)
         throw InvalidInput();
     PlayerByID &player = players->getPlayer(playerID);
+    int oldLevel = player.getLevel();
+    int score = player.getScore();
     Group *group = groups->getGroup(player.getGroupId());
-    group->removePlayer(player.getLevel(), player.getScore());
-    group->insertPlayer(levelIncrease + player.getLevel(), player.getScore());
+    group->removePlayer(oldLevel, score);
+    group->insertPlayer(levelIncrease + oldLevel, score);
     Group *all = groups->getGroup(0);
-    all->removePlayer(player.getLevel(), player.getScore());
-    all->insertPlayer(levelIncrease + player.getLevel(), player.getScore());
+    all->removePlayer(oldLevel, score);
+    all->insertPlayer(levelIncrease + oldLevel, score);
     player.addToLevel(levelIncrease);
+    validate();
 }
 
 void Game::changePlayerScore(int playerID, int newScore) {
-    if (newScore <= 0 || newScore > scale)
+    validate();
+    if (newScore <= 0 || newScore > scale || playerID <= 0)
         throw InvalidInput();
+    if (!players->exists(playerID))
+        throw NotExist();
     PlayerByID &player = players->getPlayer(playerID);
     int oldScore = player.getScore();
     if (oldScore == newScore)
         return;
     player.setScore(newScore);
     Group *group = groups->getGroup(player.getGroupId());
+    group->validate();
     int level = player.getLevel();
     group->removePlayer(level, oldScore);
     group->insertPlayer(level, newScore);
     Group *all = groups->getGroup(0);
     all->removePlayer(level, oldScore);
     all->insertPlayer(level, newScore);
+    validate();
 }
 
 double Game::getPercentOfPlayersWithScoreInBounds(int groupID, int score, int lowerLevel, int higherLevel) {
-    if (groupID > k || groupID < 0)
+    validate();
+    if (groupID > k || groupID < 0) {
         throw InvalidInput();
-    if (score > scale || score <= 0 || lowerLevel < 0 || higherLevel < 0 || lowerLevel > higherLevel)
+    }
+    if (higherLevel < 0 || lowerLevel > higherLevel)
+        throw NotExist();
+    if (score > scale || score <= 0)
         return 0;
+    lowerLevel = std::max(lowerLevel, 0);
     Group *group = groups->getGroup(groupID);
     int inScore = group->playersCountBetweenInScore(lowerLevel, higherLevel, score);
     int inGeneral = group->playersCountBetween(lowerLevel, higherLevel);
-    return inGeneral == 0? 0:((double(inScore)) / inGeneral) * 100;
+    if (inGeneral == 0)
+        throw NotExist();
+    validate();
+    return ((double(inScore)) / inGeneral) * 100;
 }
 
 
 double Game::averageHighestPlayerLevelByGroup(int groupID, int m) {
+    validate();
     if (groupID > k || groupID < 0 || m <= 0)
         throw InvalidInput();
     Group *group = groupID == 0 ? groups->getGroup(0) : groups->getGroup(groupID);
     if (m > group->getSize())
         throw OutOfRange();
+    validate();
     return group->getTopMAverage(m);
+}
 
+void Game::validate() {
+    for (int i = 0; i <= k; ++i) {
+        groups->getGroup(i)->validate();
+    }
+}
+
+Game::~Game() {
+    delete players;
+    delete groups;
 }
