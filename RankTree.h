@@ -677,7 +677,8 @@ class RankTree {
 public:
 
     void validate() {
-#ifndef DEBUG
+#ifdef DEBUG
+        assert(0);
         if (tree) {
             tree->validate();
             assert(tree->getFather() == nullptr);
@@ -763,13 +764,6 @@ public:
         validate();
     }
 
-    void recursiveAvl(my_vector<T> &vector) {
-        if (vector.empty())
-            return;
-        tree = new InnerRankTree<T>(vector);
-    }
-
-
     void balance(InnerRankTree<T> *current) {
         while (current != nullptr) {
             current = current->balance();
@@ -781,13 +775,6 @@ public:
         }
         tree = current;
         validate();
-    }
-
-    my_vector<T> getNLowest(int n) {
-        my_vector<T> vec(n);
-        if (tree != nullptr)
-            tree->getNLowest(n, &vec);
-        return vec;
     }
 
     void debugTree() {

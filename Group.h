@@ -76,6 +76,7 @@ public:
     }
 
     void validate() {
+#ifdef DEBUG
         for (int i = 0; i <= scale; i++) {
             scores[i].validateLevelTree();
         }
@@ -89,6 +90,7 @@ public:
             counter += playersCountBetweenInScore(0, max, i);
         }
         assert(counter == playersCountBetween(0, max));
+#endif
     }
 };
 
